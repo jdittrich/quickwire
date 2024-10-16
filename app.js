@@ -41,23 +41,23 @@ class App{
 
     #onMousedown(e){
         let eventPosRelativeToCanvas = this.getCanvasOffset();
-        let localEvent = LocalMouseEvent.domMouseEventAdapter(e,this.#drawingView,eventPosRelativeToCanvas);
-        this.#drawingView.onMousedown(localEvent);
+        this.#drawingView.onMousedown(eventPosRelativeToCanvas);
     }
     #onMouseup(e){
         let eventPosRelativeToCanvas = this.getCanvasOffset();
-        let localEvent = LocalMouseEvent.domMouseEventAdapter(e,this.#drawingView,eventPosRelativeToCanvas);
-        this.#drawingView.onMouseup(localEvent);
+        this.#drawingView.onMouseup(eventPosRelativeToCanvas);
     }
     #onMousemove(e){
         let eventPosRelativeToCanvas = this.getCanvasOffset();
-        let localEvent = LocalMouseEvent.domMouseEventAdapter(e,this.#drawingView,eventPosRelativeToCanvas);
-        this.#drawingView.onMousemove(localEvent);
+        this.#drawingView.onMousemove(eventPosRelativeToCanvas);
     }
     
     #onWheel(e){
        let eventPosRelativeToCanvas = this.getCanvasEventCoordinates(e)
-       let wheelDelta = e.wheelDeltaY; 
+
+       // delta is usually about 100 (so .01 brings it to dinge digits) 
+       // and scrolling down (usually "make smaller") yields positive so *- gives it the right direction.
+       let wheelDelta = e.wheelDeltaY * -0.01;   
        this.#drawingView.onWheel(eventPosRelativeToCanvas, wheelDelta)
     }
 

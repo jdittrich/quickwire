@@ -1,5 +1,5 @@
 import {ViewTransform} from './transform.js'
-import {ToolManager, LoggingTool} from './tools.js'
+import {ToolManager, LoggingTool, NoOpTool} from './tools.js'
 import { LocalMouseEvent } from './mouseEvent.js'
 
 
@@ -23,11 +23,9 @@ import {Point} from './geom.js'
  *  pan 
  */
 class DrawingView{
-
+    //private properties used in constructor
     #ctx
     #transform
-    #selection
-    #toolManager
 
     /**
      * 
@@ -36,7 +34,7 @@ class DrawingView{
      */
     constructor(ctx,drawing){
         this.#transform = new ViewTransform();
-        this.#toolManager = new ToolManager();
+        //this.#toolManager = new ToolManager();
 
         //drawing
         this.#ctx = ctx;
@@ -44,7 +42,7 @@ class DrawingView{
         this.#drawAll()
 
         //tools
-        this.#toolManager.changeTool(new LoggingTool())
+        this.changeTool(new NoOpTool())
     }
 
     //#region: drawing
@@ -60,7 +58,6 @@ class DrawingView{
         this.drawing.draw(this.#ctx)
         this.#ctx.resetTransform(); //so the next one can deal with an untransformed canvas.
     }
-    //
     #drawHandles(){
         this.#ctx.fillText("drawingHandlesWorks", 10,10);
     }
@@ -104,30 +101,123 @@ class DrawingView{
         return pointOnScreen;
     }
 
-    //#region: event handling
-    onMousedown(domMouseEvent){
-        const event = new LocalMouseEvent(point,this);
-        this.#toolManager.onMousedown(event);
+    // region: tool management
+    #tool = null; 
+    /**
+     * @param {AbstractTool} any tool to change to.
+    */
+    changeTool(tool){
+       tool.setToolManager(this)  
+       this.#tool = tool;
+    }
+    
+    //#region: events
+    #mouseDownPoint = null;
+    #dragging = false; 
+    #previousMousePosition = null;
+
+    /**
+     * @param {Point} mousePosition 
+     */
+    onMousedown(mousePosition){
+        this.#mouseDownPoint = mousePosition;
+        const localMouseEvent = new LocalMouseEvent({
+            "position": mousePosition.copy(),
+            "previousPosition": this.#previousMousePosition.copy(),
+            "view": this
+        })
+        this.#tool.onMousedown(localMouseEvent);
+        this.#previousMousePosition = mousePosition.copy();
+    }
+    
+    /**
+    * Calls mousemove, then tests if this is a dragstart or dragmove and calls none or one of them if needed.
+    * @param {Point} mousePosition
+    */
+    onMousemove(mousePosition){ 
+        const localMouseEvent = new LocalMouseEvent({
+            "position":mousePosition.copy(),
+            "previousPosition":this.#previousMousePosition.copy(),
+            "view":this
+        }) 
+
+        this.#tool.onMousemove(localMouseEvent);
+
+        //if a #mousedownpoint exists but it is not yet dragging…
+        if(this.#mouseDownPoint && !this.#dragging){
+            this.#onDragstart(localMouseEvent, this.#mouseDownPoint)
+            this.#dragging = true;
+        }
+        //if a #mousedownpoint exists and we drag already
+        if(this.#mouseDownPoint && this.#dragging){
+            this.#onDrag(localMouseEvent, this.#mouseDownPoint);
+        }
+
+        this.#previousMousePosition = mousePosition.copy();
     }
 
-    onMousemove(point){
-        const event = new LocalMouseEvent(point,this);
-        this.#toolManager.onMousemove(event);
+    /**
+     * @param {Point} mousePosition 
+     */  
+    onMouseup(mousePosition){
+        const localMouseEvent = new LocalMouseEvent({
+            "position":mousePosition.copy(),
+            "previousPosition":this.#previousMousePosition.copy(),
+            "view":this
+        })
+
+        //check if drag ends, and call this first.
+        if(this.#mouseDownPoint && this.#dragging){ 
+            this.#onDragend(localMouseEvent, this.#mouseDownPoint);
+        }
+        this.#tool.onMouseup(localMouseEvent)
+        
+        //resets
+        this.#mouseDownPoint = null;
+        this.#dragging = false
+        this.#previousMousePosition = mousePosition.copy();
     }
 
-    onMouseup(point){
-        const event = new LocalMouseEvent(point,this);
-        this.#toolManager.onMouseup(event);
+    /**
+     * @param {Point} mousePosition 
+     * @param {Number} wheelDifference 
+     */
+    onWheel(mousePosition, wheelDifference){
+        const localMouseEvent = new LocalMouseEvent({
+            "position": mousePosition.copy(),
+            "previousPosition": this.#previousMousePosition.copy(),
+            "view": this
+        })
+        this.#tool.onWheel(mouseEvent,wheelDifference);
+        this.#previousMousePosition = mousePosition.copy();
+    }
+    
+    //the drag events are automatically called from mousemove and mouseup
+    //thus, they are private and not to be called from outside directly. 
+
+    /**
+     * @param {LocalMouseEvent} mouseEvent 
+     * @param {Point} mouseDownPoint 
+     */
+    #onDragstart(mouseEvent, mouseDownPoint){
+        this.#tool.onDragstart(mouseEvent, mouseDownPoint)
+    }
+    
+    /**
+     * @param {LocalMouseEvent} mouseEvent 
+     * @param {Point} mouseDownPoint 
+     */
+    #onDrag(mouseEvent, mouseDownPoint){
+        this.#tool.onDrag(mouseEvent,mouseDownPoint)
     }
 
-    onWheel(point,wheelDelta){
-        const event = new LocalMouseEvent(point,this);
-        this.#toolManager.onWheel(event, wheelDelta);
+    /**
+     * @param {LocalMouseEvent} mouseEvent 
+     * @param {Point} mouseDownPoint 
+     */
+    #onDragend(mouseEvent, mouseDownPoint){
+        this.#tool.onDragend(mouseEvent, mouseDownPoint)
     }
-
-    //#tools
-
-
 }
 
 export {DrawingView}
