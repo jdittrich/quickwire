@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+	<meta charset="utf-8">
+	<title>UI Sketcher</title>
+  </head>
+  <body style="min-width:100%; min-height:100%; margin:0">
+  <div id="quickWire"></div>
+	<script type="module">
+    import {App} from "./app.js";
+    var qwContainer = document.getElementById("quickWire");
+
+    const quickWireApp = new App(qwContainer);
+	</script>
+  </body>
+</html>
