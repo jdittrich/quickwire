@@ -33,7 +33,7 @@ class ViewTransform{
      * @param {Number} newScale 
      * @param {Point} point - …that should stay fixed
      */
-    setScaleToPoint(newScale,point){
+    scaleByToPoint(newScale,point){
         //First we create the needed matrices
         const moveOriginToPointMatrix   = mat2d.fromTranslation(mat2d.create(),[point.x *(-1), point.y*(-1)]);//matrix to move the point of origin to the mouse cursor (in input/document coordinates)
         const scaleMatrix               = mat2d.fromScaling(    mat2d.create(),[newScale     , newScale    ]); // matrix to scale …duh.
@@ -47,6 +47,9 @@ class ViewTransform{
         this.#matrix = backTranslatedMatrix; //assign the result
     }
 
+    getScale(){
+        return this.#matrix[0];
+    }
     /**
      * @param {Point} point translates matrix by coordinates of point
      */
@@ -55,6 +58,14 @@ class ViewTransform{
         const newMatrix = mat2d.multiply(mat2d.create(),translationMatrix,this.#matrix);
         this.#matrix = newMatrix;
     }
+
+    getTranslate(){
+        return new Point({
+            x:this.#matrix[4],
+            y:this.#matrix[5]
+        })
+    }
+
 
     /**
      * Uses the matrix to transform a point

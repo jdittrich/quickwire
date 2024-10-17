@@ -1,5 +1,5 @@
 import {ViewTransform} from './transform.js'
-import {ToolManager, LoggingTool, NoOpTool} from './tools.js'
+import {LoggingTool, NoOpTool} from './tools.js'
 import { LocalMouseEvent } from './mouseEvent.js'
 
 
@@ -26,30 +26,36 @@ class DrawingView{
     //private properties used in constructor
     #ctx
     #transform
-
+    #ctxSize = null;
     /**
      * 
      * @param {RenderingContext2D } ctx 
      * @param {Drawing} drawing 
+     * @param {Point} size
      */
-    constructor(ctx,drawing){
+    constructor(ctx,drawing,size){
         this.#transform = new ViewTransform();
-        //this.#toolManager = new ToolManager();
+        
 
         //drawing
+        this.setCtxSize(size);//needed to know which area to clear on redraws
         this.#ctx = ctx;
         this.drawing = drawing;
         this.#drawAll()
+        
 
         //tools
         this.changeTool(new NoOpTool())
     }
-
+    setCtxSize(ctxSize){
+        this.#ctxSize = ctxSize;
+    }
     //#region: drawing
     updateDrawing(){
         this.#drawAll()
     }
     #drawAll(){
+        this.#ctx.clearRect(0,0,this.#ctxSize.x,this.#ctxSize.y)
         this.#drawDrawing();
         this.#drawHandles();
     }
@@ -66,7 +72,7 @@ class DrawingView{
     /**
      * @param {Point} vector 
      */
-    pan(vector){
+    panBy(vector){
         this.#transform.setTranslateBy(vector)
         this.#drawAll()
     }
@@ -76,9 +82,17 @@ class DrawingView{
      * @param {Number} zoom factor. 1=100% zoom
      * @param {Point} point in drawingView coordinates to center the zoom on
      */
-    zoom(factor,point){
-        this.#transform.setScaleToPoint(factor, point);
-        this.drawAll();
+    scaleBy(factor,point){
+        this.#transform.scaleByToPoint(factor, point);
+        this.#drawAll();
+    }
+
+    /**
+     * 
+     * @returns {Number}
+     */
+    getScale(){
+        return this.#transform.getScale()
     }
     
     /**
@@ -103,18 +117,27 @@ class DrawingView{
 
     // region: tool management
     #tool = null; 
+
     /**
      * @param {AbstractTool} any tool to change to.
     */
     changeTool(tool){
-       tool.setToolManager(this)  
-       this.#tool = tool;
+        tool.setDrawingView(this)  
+        this.#tool = tool;
+    }
+
+    /**
+     * returns the currently active tool.
+     * @returns {AbstractTool}
+     */
+    getTool(){
+        return this.#tool;
     }
     
     //#region: events
     #mouseDownPoint = null;
     #dragging = false; 
-    #previousMousePosition = null;
+    #previousMousePosition = new Point({x:0,y:0});//to calculate the first difference we need *any* valid point here. 
 
     /**
      * @param {Point} mousePosition 
@@ -122,7 +145,7 @@ class DrawingView{
     onMousedown(mousePosition){
         this.#mouseDownPoint = mousePosition;
         const localMouseEvent = new LocalMouseEvent({
-            "position": mousePosition.copy(),
+            "screenPosition": mousePosition.copy(),
             "previousPosition": this.#previousMousePosition.copy(),
             "view": this
         })
@@ -136,7 +159,7 @@ class DrawingView{
     */
     onMousemove(mousePosition){ 
         const localMouseEvent = new LocalMouseEvent({
-            "position":mousePosition.copy(),
+            "screenPosition":mousePosition.copy(),
             "previousPosition":this.#previousMousePosition.copy(),
             "view":this
         }) 
@@ -161,7 +184,7 @@ class DrawingView{
      */  
     onMouseup(mousePosition){
         const localMouseEvent = new LocalMouseEvent({
-            "position":mousePosition.copy(),
+            "screenPosition":mousePosition.copy(),
             "previousPosition":this.#previousMousePosition.copy(),
             "view":this
         })
@@ -180,15 +203,15 @@ class DrawingView{
 
     /**
      * @param {Point} mousePosition 
-     * @param {Number} wheelDifference 
+     * @param {Number} wheelDelta 
      */
-    onWheel(mousePosition, wheelDifference){
+    onWheel(mousePosition, wheelDelta){
         const localMouseEvent = new LocalMouseEvent({
-            "position": mousePosition.copy(),
+            "screenPosition": mousePosition.copy(),
             "previousPosition": this.#previousMousePosition.copy(),
             "view": this
         })
-        this.#tool.onWheel(mouseEvent,wheelDifference);
+        this.#tool.onWheel(localMouseEvent,wheelDelta);
         this.#previousMousePosition = mousePosition.copy();
     }
     

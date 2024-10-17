@@ -3,7 +3,11 @@
 import { DrawingView } from "./drawingView.js";
 import { Point } from "./geom.js";
 
-
+/**
+ * Our own mouse event. 
+ * It does not depend on the DOM mouse events (except for calculating the initial mouse position)
+ * It knows the drawingView, so it can provide positions and movement in document coordinates. 
+ */
 class LocalMouseEvent{ 
     #screenPosition
     #previousPosition
@@ -15,8 +19,11 @@ class LocalMouseEvent{
      * @param {DrawingView} params.view - needs access to point transformation methods of view.
      */
     constructor(params){
-        this.#screenPosition = params.screenPosition;
-        this.#previousPosition = params.previousPosition;
+        if(!params.screenPosition || !params.previousPosition || !params.view){
+            throw new Error("At least one needed parameter is not defined");
+        }
+        this.#screenPosition = params.screenPosition
+        this.#previousPosition = params.previousPosition
         this.drawingView = params.view; 
     }
 

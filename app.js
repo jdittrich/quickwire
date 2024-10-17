@@ -2,7 +2,7 @@ import { Drawing } from "./drawing.js"
 import { DrawingView } from "./drawingView.js"
 import { Point } from "./geom.js"
 import { LocalMouseEvent } from "./mouseEvent.js"
-import { ToolManager } from "./tools.js"
+import { SelectionTool } from "./tools.js"
 
 class App{
     #canvas
@@ -35,29 +35,34 @@ class App{
         this.#drawing = new Drawing();
         this.#drawingView = new DrawingView(
             this.#canvas.getContext("2d"),
-            this.#drawing
+            this.#drawing,
+            new Point({
+                x:this.#canvas.width,
+                y:this.#canvas.height
+            })
         );
+
+        this.#drawingView.changeTool(new SelectionTool())
     }
 
     #onMousedown(e){
-        let eventPosRelativeToCanvas = this.getCanvasOffset();
+        let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
         this.#drawingView.onMousedown(eventPosRelativeToCanvas);
     }
     #onMouseup(e){
-        let eventPosRelativeToCanvas = this.getCanvasOffset();
+        let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
         this.#drawingView.onMouseup(eventPosRelativeToCanvas);
     }
     #onMousemove(e){
-        let eventPosRelativeToCanvas = this.getCanvasOffset();
+        let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
         this.#drawingView.onMousemove(eventPosRelativeToCanvas);
     }
     
     #onWheel(e){
-       let eventPosRelativeToCanvas = this.getCanvasEventCoordinates(e)
-
-       // delta is usually about 100 (so .01 brings it to dinge digits) 
-       // and scrolling down (usually "make smaller") yields positive so *- gives it the right direction.
-       let wheelDelta = e.wheelDeltaY * -0.01;   
+       let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
+        
+       //Normalize to -1 (wheel moved to user), +1 (wheel moved from user) 
+       let wheelDelta = e.wheelDeltaY > 0 ? 1:-1;   
        this.#drawingView.onWheel(eventPosRelativeToCanvas, wheelDelta)
     }
 
@@ -82,6 +87,18 @@ class App{
         });
 
         return offset;
+    }
+
+    getLocalEventPosition(mouseEvent){
+        const canvasOffset = this.getCanvasOffset();
+        const eventPosition = new Point({
+            "x":mouseEvent.clientX,
+            "y":mouseEvent.clientY
+        });
+
+        const localPosition = canvasOffset.offsetTo(eventPosition);
+        return localPosition;
+
     }
 
 }
