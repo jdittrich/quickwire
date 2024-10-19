@@ -2,7 +2,7 @@ import { Drawing } from "./drawing.js"
 import { DrawingView } from "./drawingView.js"
 import { Point } from "./geom.js"
 import { LocalMouseEvent } from "./mouseEvent.js"
-import { SelectionTool } from "./tools.js"
+import { SelectionTool, NoOpTool } from "./tools.js"
 
 class App{
     #canvas
@@ -15,7 +15,6 @@ class App{
      */
 
     constructor(domContainer){
-
         //setup DOM
         this.#domContainer = domContainer;
         this.#canvas = document.createElement("canvas");
@@ -30,6 +29,7 @@ class App{
         this.#canvas.addEventListener("keyup", this.#keyup.bind(this));
         
         this.#domContainer.append(this.#canvas);
+
         
         //setup drawing view
         this.#drawing = new Drawing();
@@ -43,6 +43,11 @@ class App{
         );
 
         this.#drawingView.changeTool(new SelectionTool())
+
+        this.toolbar = new Toolbar(this.#drawingView);
+        this.#domContainer.append(this.toolbar.domElement);
+        this.toolbar.addTool("selection", new SelectionTool());
+        this.toolbar.addTool("noop", new NoOpTool());
     }
 
     #onMousedown(e){
@@ -98,9 +103,36 @@ class App{
 
         const localPosition = canvasOffset.offsetTo(eventPosition);
         return localPosition;
-
     }
+}
 
+class Toolbar{
+    domElement = null; 
+
+    constructor(drawingView){
+        console.log("toolbar initialized")
+        this.domElement = document.createElement("div");
+        this.domElement.className = "qwToolbar"
+        this.drawingView = drawingView;
+    }
+    addTool(label, tool){
+        const button = new ToolbarButton(label, tool,this.drawingView)
+        this.domElement.append(button.domElement);
+    }
+}
+
+class ToolbarButton{
+    domElement = null;
+    constructor(label, tool, view){
+        const changeTool = function(){
+            view.changeTool(tool)
+        }
+        const htmlButton = document.createElement("button");
+        htmlButton.innerText = label;
+        htmlButton.className = "qwToolbarButton"
+        htmlButton.addEventListener("click",changeTool,false)
+        this.domElement = htmlButton;
+    }
 }
 
 export {App};
