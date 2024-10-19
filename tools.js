@@ -21,7 +21,7 @@ class AbstractTool{
     constructor(){}
     /**
      * Internal use only. Counterpart to toolManager’s change tool; this way, 
-     * Every tool "knows" toolManager, so it can use it to change to another tool
+     * Every tool "knows" the view, so it can use it to change to another tool
      * @param {DrawingView} drawingView
      * @see: DrawingView
      */
@@ -51,7 +51,7 @@ class AbstractTool{
      * @param {LocalMouseEvent} mouseEvent 
      * @param {Point} downpoint 
      */
-    onDrag(mouseEvent,downpoint){}
+    onDrag(mouseEvent,downpoint){ }
     
     /**
      * @param {LocalMouseEvent} mouseEvent 
@@ -127,9 +127,30 @@ class SelectionTool extends AbstractTool{
     }
 }
 
+//Adds an element to the drawing
+class AddElementTool{
+    #elementToCreate = null;
+    /**
+     * @param {AbstractFigure} figure - that is to be created in the drawing
+     */
+    constructor(figure){
+        console.log("addElementToolCreated")
+    }
+    onDragStart(event){
+        //create the element
+    }
+    onDrag(event){
+        
+    }
+    onMouseup(event){
+        
+    }
+}
+
 // #region: Trackers
 // Trackers are child tools for other tools. They are not initialized with "changeTool" on view
 // they thus do not have this.drawingView (but they can use the view from the event)
+
 class PanTracker extends AbstractTool{
     /**
      * 
@@ -142,7 +163,7 @@ class PanTracker extends AbstractTool{
 }
 
 class DragTracker extends AbstractTool{
-
+  
 }
 
 class HandleTracker extends AbstractTool{
@@ -152,91 +173,5 @@ class HandleTracker extends AbstractTool{
         this.#handle = handle
     }
 }
-
-
-/**
- * Tool manager 
- * 
- * - change currently active tool 
- * - calls event handlers of the currently active tool.
- * - generates drag events if the user drags and calls the drag event handlers on the active tool.
- * 
- * Design pattern: State
- * 
- * @see: LocalMouseEvent, AbstractTool
- */
-class ToolManager{
-    #mouseDownPoint = null; 
-    #dragging = false; 
-    #tool = null; 
-
-    constructor(){
-      this.changeTool(new NoOpTool()); //noop, so nothing crashes when event handlers are called.
-    }
-
-    /**
-     * @param {AbstractTool} any tool to change to.
-     */
-    changeTool(tool){
-        // we could also do some init and teardown stuff here: teardown the current tool
-        tool.setToolManager(this)  
-        this.#tool = tool;
-    }
-
-    //#region: EventHandlers
-
-    keydown(event){
-        this.#tool.onKeyPress(event)
-    }
-
-    /**
-     * @param {LocalMouseEvent} mouseEvent 
-     */
-    onMousedown(mouseEvent){
-        this.#mouseDownPoint = mouseEvent.getScreenPosition();
-        this.#tool.onMousedown(mouseEvent)
-    }
-    /**
-     * Calls mousemove, then tests if this is a dragstart or dragmove and calls none or one of them if needed.
-     * @param {LocalMouseEvent} mouseEvent 
-     */
-    onMousemove(mouseEvent){ 
-        this.#tool.onMousemove(mouseEvent,this.#mouseDownPoint);
-
-        if(this.#mouseDownPoint && !this.#dragging){
-            this.#onDragstart(mouseEvent, this.#mouseDownPoint)
-            this.#dragging = true;
-        }
-        if(this.#mouseDownPoint && this.#dragging){
-            this.#onDrag(mouseEvent, this.#mouseDownPoint);
-        }
-    }
-    /**
-     * @param {LocalMouseEvent} mouseEvent 
-     */  
-    onMouseup(mouseEvent){
-        if(this.#mouseDownPoint && this.#dragging){ //check if drag ends, and call this first.
-            this.#onDragend(mouseEvent, this.#mouseDownPoint);
-        }
-         //resets
-        this.#mouseDownPoint = null;
-        this.#dragging = false
-        
-        this.#tool.onMouseup(mouseEvent, this.#mouseDownPoint)
-    }
-    #onDragstart(mouseEvent, mouseDownPoint){
-        this.#tool.onDragstart(mouseEvent, mouseDownPoint)
-    }
-    #onDrag(mouseEvent, mouseDownPoint){
-        this.#tool.onDrag(mouseEvent,mouseDownPoint)
-    }
-    #onDragend(mouseEvent, mouseDownPoint){
-        this.#tool.onDragend(mouseEvent, mouseDownPoint)
-    }
-    onWheel(mouseEvent, wheelDifference){
-        this.#tool.onWheel(mouseEvent,wheelDifference)
-    }
-}
-
 
 export {LoggingTool, NoOpTool, SelectionTool}
