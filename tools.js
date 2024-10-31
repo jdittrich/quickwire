@@ -8,7 +8,7 @@
 
 //for types
 import { DrawingView } from './drawingView.js';
-import {LocalMouseEvent} from './mouseEvent.js'
+import {LocalDragEvent, LocalMouseEvent} from './mouseEvent.js'
 
 
 /**
@@ -128,22 +128,58 @@ class SelectionTool extends AbstractTool{
 }
 
 //Adds an element to the drawing
-class AddElementTool{
-    #elementToCreate = null;
+//TODO: 
+// - First create an element that only previews
+// - Add the element directly
+// - Add the element via command. 
+class CreateElementTool extends AbstractTool{
+    #figureToCreate = null;
+    #previewFigure = null;
     /**
      * @param {AbstractFigure} figure - that is to be created in the drawing
      */
-    constructor(figure){
-        console.log("addElementToolCreated")
+    constructor(figureToCreate){
+        super();
+        this.#figureToCreate = figureToCreate;
     }
-    onDragStart(event){
-        //create the element
+    /**
+     * 
+     * @param {LocalMouseEvent} event 
+     * @param {Point} mouseDownPoint 
+     */
+    onDragstart(event,mouseDownPoint){
+        //WIP
+        //create the element, size is 
+        this.#previewFigure = this.#figureToCreate.copy();
+        this.drawingView.startPreviewOf(this.#previewFigure);
     }
-    onDrag(event){
+    /**
+     * @param {LocalDragEvent} event 
+     */
+    onDrag(event){ 
+        const currentMousePoint = event.getDocumentPosition(); 
+        const documentMouseDownPoint = event.getMousedownDocumentPosition();
+        this.#previewFigure.setRectByPoints(documentMouseDownPoint,currentMousePoint);
+        this.drawingView.updateDrawing();
+    }
+    /**
+     * 
+     * @param {LocalMouseEvent} event 
+     * @param {Point} mouseDownPoint 
+     */
+    onDragend(event){
+        //or I only append to view() and it automatically appends to the right things?
+        const newFigure = this.#figureToCreate.copy();
+        const currentMousePoint = event.getDocumentPosition(); 
+        const documentMouseDownPoint = event.getMousedownDocumentPosition();
+        newFigure.setRectByPoints(currentMousePoint, documentMouseDownPoint); 
         
-    }
-    onMouseup(event){
+        //call this when you want to append a figure anywhere, it figures out where to drop it?
+        this.drawingView.addFigure(newFigure);
         
+        //cleanup
+        this.#previewFigure = null;
+        this.drawingView.endPreview();
     }
 }
 
@@ -158,12 +194,15 @@ class PanTracker extends AbstractTool{
      */
     onDrag(event){
         const dragMovement = event.getScreenMovement();
-        event.drawingView.panBy(dragMovement);
+        event.drawingView.panBy(dragMovement);  
     }
 }
 
 class DragTracker extends AbstractTool{
-  
+    onDragend(event,downpoint){
+        // const moveCommand = new moveFigureCommand(FigureToMove,newPosition);
+        // this.drawingView.execute(newMoveCommand);
+    }
 }
 
 class HandleTracker extends AbstractTool{
@@ -172,6 +211,8 @@ class HandleTracker extends AbstractTool{
         super();
         this.#handle = handle
     }
+
+    //figure.rectByPoints(… …)
 }
 
-export {LoggingTool, NoOpTool, SelectionTool}
+export {LoggingTool, NoOpTool, SelectionTool, CreateElementTool}

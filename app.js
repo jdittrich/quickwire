@@ -1,8 +1,9 @@
 import { Drawing } from "./drawing.js"
 import { DrawingView } from "./drawingView.js"
 import { Point } from "./geom.js"
+import { RectFigure } from "./figures.js"
 import { LocalMouseEvent } from "./mouseEvent.js"
-import { SelectionTool, NoOpTool } from "./tools.js"
+import { SelectionTool, NoOpTool, CreateElementTool } from "./tools.js"
 
 class App{
     #canvas
@@ -13,7 +14,6 @@ class App{
      * 
      * @param {HTMLElement} container 
      */
-
     constructor(domContainer){
         //setup DOM
         this.#domContainer = domContainer;
@@ -48,6 +48,8 @@ class App{
         this.#domContainer.append(this.toolbar.domElement);
         this.toolbar.addTool("selection", new SelectionTool());
         this.toolbar.addTool("noop", new NoOpTool());
+        const rectFigureTemplate = new RectFigure({"x":0,"y":0,"width":10,"height":10});
+        this.toolbar.addTool("newRect", new CreateElementTool(rectFigureTemplate));
     }
 
     #onMousedown(e){

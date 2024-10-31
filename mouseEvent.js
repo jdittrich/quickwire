@@ -35,6 +35,7 @@ class LocalMouseEvent{
     }
 
     /**
+     * Vector between current mouse position and the previous one in screen coordinates
      * @returns {Point}
      */
     getScreenMovement(){
@@ -45,16 +46,17 @@ class LocalMouseEvent{
      * @returns {Point}
      */
     getDocumentPosition(){
-        const transformedPosition = this.drawingView.screenToDocumentPosition(this.screenPosition);
+        const transformedPosition = this.drawingView.screenToDocumentPosition(this.#screenPosition);
         return transformedPosition;
     }
 
     /**
+     * Vector between current mouse position and the previous one in document coordinates
      * @returns {Point}
      */
     getDocumentMovement(){
         const screenMovement = this.getScreenMovement()
-        const documentMovement = this.DrawingView.screenToDocumentPosition(screenMovement);
+        const documentMovement = this.drawingView.screenToDocumentPosition(screenMovement);
         return documentMovement;
     }
 
@@ -73,8 +75,57 @@ class LocalMouseEvent{
     }
 }
 
+/**
+ * A drag event, in addition to mouseEvent it has 
+ */
+class LocalDragEvent extends LocalMouseEvent{
+    #downPoint = null;
 
-export {LocalMouseEvent}
+    /**
+     * @param {Object}      params
+     * @param {Point}       params.screenPosition - where the event on the view happened in screen coordinates (in contrast to document coordinates)
+     * @param {Point}       params.previousPosition
+     * @param {DrawingView} params.view - needs access to point transformation methods of view.
+     * @param {Point}       params.downpoint
+     */
+    constructor(params){
+        super(params);
+        if(!params.downPoint){
+            throw new Error("Downpoint not passed");
+        }
+        this.#downPoint = params.downPoint
+    }
+    getMousedownScreenPosition(){
+       return this.#downPoint;
+    }
+    getMousedownDocumentPosition(){
+        const transformedPosition = this.drawingView.screenToDocumentPosition(this.#downPoint);
+        return transformedPosition;
+    }
+
+    /**
+     * Vector from start of drag to current mouse position, in screen coordinates
+     * @returns {Point}
+     */
+    getScreenDragMovement(){
+        const  currentScreenPosition = this.getScreenPosition()
+        const  dragDistance = this.#downPoint.offsetTo(currentScreenPosition);
+        return dragDistance
+    }
+
+    /**
+     * Vector from start of drag to current mouse position, in document coordinates
+     * @returns {Point}
+     */
+    getDocumentDragMovement(){
+        const screenMovement = this.getScreenMovement();
+        const drawingView = this.getDrawingView();
+        const documentDragMovement = drawingView.screenToDocumentPosition(screenMovement);
+        return documentDragMovement
+    }
+}
+
+export {LocalMouseEvent, LocalDragEvent}
 
 /**
  * NOTES:

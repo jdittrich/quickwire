@@ -153,7 +153,7 @@ class Rect{
      * @param {Point} point
      * @returns {boolean} 
      */
-    containsPoint(point){
+    enclosesPoint(point){
         const isBeyondStartHorizontal = point.x >=  this.x;
         const isNotBeyondEndHorizontal = point.x <= this.x + this.width;
         const isInHorizontalRange = isBeyondStartHorizontal && isNotBeyondEndHorizontal;
@@ -171,7 +171,7 @@ class Rect{
      * @param {Rect} rect 
      * @returns {boolean}
      */
-    containsRectangle(rect){
+    enclosesRect(rect){
         const topIsHigher = this.y < rect.y;
         const bottomIsLower = (this.y + this.height) > (rect.y + rect.height);
         const leftIsMoreLeft = this.x < rect.x;
@@ -185,7 +185,7 @@ class Rect{
      * @param {Rect} rect
      * @returns {boolean} 
      */
-    overlaps(rect){
+    overlapsRect(rect){
         //from: https://stackoverflow.com/a/306332/263398
         const isNotFullyLeftToMe  =  this.x < (rect.x + rect.width); //my left side further left than your right side
         const isNotFullyRightToMe = (this.x + this.width) > rect.x;   //my right side further right than your right side
@@ -194,6 +194,42 @@ class Rect{
 
         const overlaps = isNotFullyLeftToMe && isNotFullyRightToMe && isNotFullyOverMe && isNotFullyBelowMe;
         return overlaps
+    }
+
+    toJSON(){
+        return{
+            "x": this.x,
+            "y": this.y,
+            "height":this.height,
+            "width": this.width
+        }
+    }
+
+    /**
+     * Creates a rectangle from two points with the absolute positions of two 
+     * opposed corners of the rectangle
+     */
+    static createFromCornerPoints(point1, point2){
+        //these can be any two points in any order 
+        //And neither might be the top-right corner, i.e. they could be ⠑ but also ⠊
+          
+        const leftmostPosition   = Math.min(point1.x, point2.x);
+        const rightmostPosition  = Math.max(point1.x, point2.x);
+        const topmostPosition    = Math.min(point1.y, point2.y);
+        const bottommostPosition = Math.max(point1.y, point2.y);
+
+        const upperLeftCorner   = new Point({"x":leftmostPosition, "y":topmostPosition});
+        const bottomRightCorner = new Point({"x":rightmostPosition,"y":bottommostPosition});
+        const dimensions = upperLeftCorner.offsetTo(bottomRightCorner);
+
+        const rectFromCornerPoints = new Rect({
+            x:upperLeftCorner.x,
+            y:upperLeftCorner.y,
+            width: dimensions.x,
+            height:dimensions.y
+        });
+
+        return rectFromCornerPoints;
     }
 }
 

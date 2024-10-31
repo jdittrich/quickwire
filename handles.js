@@ -42,7 +42,7 @@ class Handle{
      * @param {Point} point (document space)
      * @returns {Boolean} - whether the point is in the handle or not 
      */
-    containsPoint(point){
+    enclosesPoint(point){
 
     }
 

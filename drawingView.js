@@ -1,7 +1,7 @@
 import {ViewTransform} from './transform.js'
 import {LoggingTool, NoOpTool} from './tools.js'
-import { LocalMouseEvent } from './mouseEvent.js'
-
+import { LocalMouseEvent, LocalDragEvent } from './mouseEvent.js'
+import {NoOpFigure} from './figures.js'
 
 //used as types
 import { Drawing } from './drawing.js'
@@ -58,6 +58,7 @@ class DrawingView{
         this.#ctx.clearRect(0,0,this.#ctxSize.x,this.#ctxSize.y)
         this.#drawDrawing();
         this.#drawHandles();
+        this.#drawPreviews();
     }
     #drawDrawing(){
         this.#ctx.setTransform(...this.#transform.toArray()); //zoom and pan
@@ -66,6 +67,25 @@ class DrawingView{
     }
     #drawHandles(){
         this.#ctx.fillText("drawingHandlesWorks", 10,10);
+    }
+
+    //#region: previews
+    #previewElement = new NoOpFigure();
+
+
+    #drawPreviews(){ 
+        // that probably can be sped up by entering a preview mode, triggered by the tool
+        // saving the canvas state and just redrawing whats new that
+        this.#ctx.setTransform(...this.#transform.toArray());
+        this.#previewElement.draw(this.#ctx);
+        this.#ctx.resetTransform();
+    }
+    
+    startPreviewOf(figureToPreview){ //puts figure in preview
+        this.#previewElement = figureToPreview;
+    }
+    endPreview(){ //replaces preview with NOOP
+        this.#previewElement = new NoOpFigure();
     }
 
     //#region: Transformations
@@ -115,7 +135,7 @@ class DrawingView{
         return pointOnScreen;
     }
 
-    // region: tool management
+    //#region: tool management
     #tool = null; 
 
     /**
@@ -159,23 +179,32 @@ class DrawingView{
     */
     onMousemove(mousePosition){ 
         const localMouseEvent = new LocalMouseEvent({
-            "screenPosition":mousePosition.copy(),
-            "previousPosition":this.#previousMousePosition.copy(),
+            "screenPosition": mousePosition,
+            "previousPosition": this.#previousMousePosition,
             "view":this
-        }) 
+        });
 
         this.#tool.onMousemove(localMouseEvent);
-
+        
         //if a #mousedownpoint exists but it is not yet dragging…
-        if(this.#mouseDownPoint && !this.#dragging){
-            this.#onDragstart(localMouseEvent, this.#mouseDownPoint)
-            this.#dragging = true;
-        }
-        //if a #mousedownpoint exists and we drag already
-        if(this.#mouseDownPoint && this.#dragging){
-            this.#onDrag(localMouseEvent, this.#mouseDownPoint);
-        }
+        if(this.#mouseDownPoint){
+            const localDragEvent = new LocalDragEvent({
+                "screenPosition":mousePosition,
+                "previousPosition":this.#previousMousePosition,
+                "downPoint": this.#mouseDownPoint,
+                "view":this
+            });
+            if(!this.#dragging){
+                this.#onDragstart(localDragEvent);
+                this.#onDrag(localDragEvent);
+                this.#dragging = true;
+            } else  {
+                this.#onDrag(localDragEvent);
+            }
 
+
+        }
+        
         this.#previousMousePosition = mousePosition.copy();
     }
 
@@ -191,7 +220,13 @@ class DrawingView{
 
         //check if drag ends, and call this first.
         if(this.#mouseDownPoint && this.#dragging){ 
-            this.#onDragend(localMouseEvent, this.#mouseDownPoint);
+            const localDragEvent = new LocalDragEvent({
+                "screenPosition":mousePosition,
+                "previousPosition":this.#previousMousePosition,
+                "downPoint": this.#mouseDownPoint,
+                "view":this
+            });
+            this.#onDragend(localDragEvent);
         }
         this.#tool.onMouseup(localMouseEvent)
         
@@ -240,6 +275,23 @@ class DrawingView{
      */
     #onDragend(mouseEvent, mouseDownPoint){
         this.#tool.onDragend(mouseEvent, mouseDownPoint)
+    }
+
+    // #region add/remove element
+
+    /**
+     * add figures directly via code, useful for testing
+     * @param {Figure} figure to be added
+     */
+    addFigure(figure){
+        this.drawing.appendFigure(figure);
+    }
+
+    /**
+     * @param {Figure} figure 
+     */
+    removeFigure(figure){
+       figure.remove();
     }
 }
 
