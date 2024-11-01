@@ -1,13 +1,17 @@
 import {Rect, Point} from './geom.js';
+import { SubclassShouldImplementError } from './errors.js';
 
 class Figure extends EventTarget{
     constructor(){
         super();
     }
     
+    /** Method called from other object. Interface to all needed drawing operations */
     draw(ctx){
-        throw new Error("called Figure’s draw method, but it needs to be implemented by the subclass");
+        this.drawFigure(ctx);
     }
+    /**Called by draw(), draws the figure itself*/
+    drawFigure(ctx){throw new SubclassShouldImplementError("drawFigure","Figure")}
     
     //#region position and dimensions via rect
     #rect = null; 
@@ -83,7 +87,6 @@ class Figure extends EventTarget{
         return !!this.#containedBy;
     }
 
-    
     getContainedFigures(){ //here as a placeholder to ensure a common interface between composite and non-composite
         return [];
     }
@@ -125,7 +128,7 @@ class Figure extends EventTarget{
      * @returns {Boolean}
      */
     enclosesPoint(point){
-        const doesContainPoint = this.#rect.containsPoint(point);
+        const doesContainPoint = this.#rect.enclosesPoint(point);
         return doesContainPoint;
     }
 
@@ -138,10 +141,32 @@ class Figure extends EventTarget{
         const  doesThisContainFigure = this.#rect.enclosesRect(otherFigureRect);
         return doesThisContainFigure; 
     }
+    //# region visibility
+    #isVisible = true
+    
+    /**
+     * @returns {Boolean}
+     */
+    getIsVisible(){
+        return this.#isVisible;
+    }
+
+    /**
+     * @param {Boolean} isVisible 
+     */
+    setIsVisible(isVisible){
+        this.#isVisible(isVisible);
+    }
+
     //#region: copy
 
+    /**
+     * Should return a copy of the figure with all its subfigures? Or maybe I implement , deep = false or copyDeep /copyShallow
+     * @returns {Figure}
+     */
     copy(){
-        throw new Error("called copy on Figure, but copy should be implemented in subclass")
+        const figureJSON = this.toJSON();
+        return new this.constructor(figureJSON);
     }
 
     //#region serialization/deserialization
@@ -150,14 +175,14 @@ class Figure extends EventTarget{
      * @returns {JSON}
      */
     toJSON(){
-        throw new Error("toJson called on Figure, but it should be implemented in subclass")
+        throw new SubclassShouldImplementError("toJSON","Figure");
     }
 
     /**
      * string serialization read by people, similar to python’s __str__
      */
     toString(){
-        throw new Error("toString called on Figure, but it should be implemented in subclass") 
+        throw new SubclassShouldImplementError("toString","Figure");
     }
 }
 
@@ -172,7 +197,13 @@ class CompositeFigure extends Figure{
     constructor(){
         super();
     }
-    
+    draw(ctx){
+        this.drawFigure(ctx);
+        this.drawContainedFigures(ctx);
+    }
+    drawFigure(){ 
+        throw new SubclassShouldImplementError("drawFigure","CompositeFigure");
+    }
     drawContainedFigures(ctx){
         this.#containedFigures.forEach(figure => figure.draw(ctx));
     }
@@ -295,14 +326,12 @@ class RectFigure extends CompositeFigure{
             "height":height
         }));
     }
-    draw(ctx){
+    drawFigure(ctx){
+        //pre draw: TODO check visibility
         const {width,height,x,y} = this.getRect();
         ctx.strokeRect(x,y,width,height);
-        this.drawContainedFigures(ctx);
-    }
-    copy(){
-        const figureJSON = this.toJSON();
-        return new RectFigure(figureJSON);
+        //post draw
+        //this.drawContainedFigures(ctx);
     }
 
     toJSON(){

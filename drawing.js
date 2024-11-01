@@ -18,15 +18,15 @@ class Drawing extends CompositeFigure{
     }
     //#region hit tests
     findFiguresEnclosingPoint(point){
-       const figuresBelowPoint = findFiguresBelowPoint(this,point,true);
+       const figuresBelowPoint = findFiguresBelowPoint(this,point,false);
        return figuresBelowPoint;
     }
     findFiguresEnclosingFigure(figure){
-        const enclosingFigures = findEnclosingFigures(this,figure, true);
+        const enclosingFigures = findEnclosingFigures(this,figure, false);
         return enclosingFigures;
     }
     findFiguresEnclosedByFigure(figure){
-        const enclosedFigures = findEnclosedFigures(this,figure,true);
+        const enclosedFigures = findEnclosedFigures(this,figure,false);
         return enclosedFigures;
     }
 }

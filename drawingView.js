@@ -1,5 +1,5 @@
 import {ViewTransform} from './transform.js'
-import {LoggingTool, NoOpTool} from './tools.js'
+import { NoOpTool } from './tools/noopTool.js'
 import { LocalMouseEvent, LocalDragEvent } from './mouseEvent.js'
 import {NoOpFigure} from './figures.js'
 
@@ -80,9 +80,15 @@ class DrawingView{
         this.#previewElement.draw(this.#ctx);
         this.#ctx.resetTransform();
     }
-    
+
+    /**
+     * @returns {Figure}
+     */
+    getPreviewedFigure(){
+        return this.#previewElement;
+    }
     startPreviewOf(figureToPreview){ //puts figure in preview
-        this.#previewElement = figureToPreview;
+        this.#previewElement = figureToPreview.copy();
     }
     endPreview(){ //replaces preview with NOOP
         this.#previewElement = new NoOpFigure();
@@ -278,7 +284,6 @@ class DrawingView{
     }
 
     // #region add/remove element
-
     /**
      * add figures directly via code, useful for testing
      * @param {Figure} figure to be added
@@ -293,6 +298,9 @@ class DrawingView{
     removeFigure(figure){
        figure.remove();
     }
+
+    //region hit tests
+    
 }
 
 export {DrawingView}

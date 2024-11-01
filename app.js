@@ -3,7 +3,10 @@ import { DrawingView } from "./drawingView.js"
 import { Point } from "./geom.js"
 import { RectFigure } from "./figures.js"
 import { LocalMouseEvent } from "./mouseEvent.js"
-import { SelectionTool, NoOpTool, CreateElementTool } from "./tools.js"
+//import { SelectionTool, NoOpTool, CreateElementTool } from "./tools.js"
+import { SelectionTool } from "./tools/selectionTool.js";
+import { NoOpTool } from "./tools/noopTool.js";
+import { CreateElementTool } from "./tools/createElementTool.js";
 
 class App{
     #canvas
