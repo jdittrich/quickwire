@@ -1,5 +1,5 @@
 import { DrawingView } from '../drawingView.js';
-import {LocalDragEvent, LocalMouseEvent} from '../mouseEvent.js'
+import {LocalDragEvent, LocalMouseEvent} from '../events.js'
 
 
 /**

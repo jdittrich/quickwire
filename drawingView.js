@@ -1,6 +1,6 @@
 import {ViewTransform} from './transform.js'
 import { NoOpTool } from './tools/noopTool.js'
-import { LocalMouseEvent, LocalDragEvent } from './mouseEvent.js'
+import { LocalMouseEvent, LocalDragEvent } from './events.js'
 import {NoOpFigure} from './figures.js'
 
 //used as types
@@ -71,7 +71,7 @@ class DrawingView{
 
     //#region: previews
     #previewElement = new NoOpFigure();
-
+    #previewedElement = null; 
 
     #drawPreviews(){ 
         // that probably can be sped up by entering a preview mode, triggered by the tool
@@ -82,16 +82,32 @@ class DrawingView{
     }
 
     /**
+     * @see {startPreviewOf}
      * @returns {Figure}
      */
     getPreviewedFigure(){
         return this.#previewElement;
     }
+    /**
+     * Use to start a preview of a figure which then can be accessed via getPreviewedFigure
+     * Makes the previewed Figure invisible so it looks as if you interact with the original figure
+     * @see {getPreviewedFigure}
+     * @param {Figure} figureToPreview 
+     */
     startPreviewOf(figureToPreview){ //puts figure in preview
+        this.#previewedElement = figureToPreview;
         this.#previewElement = figureToPreview.copy();
+        figureToPreview.setIsVisible(false);
     }
+
+    /**
+     * End the preview of a figure and make the formerly previewed Figure visible again. 
+     * 
+     */
     endPreview(){ //replaces preview with NOOP
         this.#previewElement = new NoOpFigure();
+        this.#previewedElement.setIsVisible(true);
+        this.#previewedElement = null; 
     }
 
     //#region: Transformations
@@ -119,6 +135,13 @@ class DrawingView{
      */
     getScale(){
         return this.#transform.getScale()
+    }
+
+    /**
+     * @returns {Point}
+     */
+    getPan(){
+        return this.#transform.getTranslate();
     }
     
     /**

@@ -1,5 +1,5 @@
 import { AbstractTool } from "./abstractTool.js";
-import {LocalDragEvent, LocalMouseEvent} from '../mouseEvent.js'
+import {LocalDragEvent, LocalMouseEvent} from '../events.js'
 
 //Adds an element to the drawing
 //TODO: 

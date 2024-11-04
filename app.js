@@ -2,7 +2,7 @@ import { Drawing } from "./drawing.js"
 import { DrawingView } from "./drawingView.js"
 import { Point } from "./geom.js"
 import { RectFigure } from "./figures.js"
-import { LocalMouseEvent } from "./mouseEvent.js"
+import { LocalMouseEvent } from "./events.js"
 //import { SelectionTool, NoOpTool, CreateElementTool } from "./tools.js"
 import { SelectionTool } from "./tools/selectionTool.js";
 import { NoOpTool } from "./tools/noopTool.js";

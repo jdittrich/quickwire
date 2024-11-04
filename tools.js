@@ -73,6 +73,6 @@
 //         this.drawingView.endPreview();
 //     }
 // }
-
+    
 
 // export {LoggingTool, NoOpTool, SelectionTool, CreateElementTool}

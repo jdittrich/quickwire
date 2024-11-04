@@ -1,5 +1,5 @@
 import {AbstractTool} from './abstractTool.js';
-import {LocalDragEvent, LocalMouseEvent} from './../mouseEvent.js'
+import {LocalDragEvent, LocalMouseEvent} from '../events.js'
 
 class SelectionTool extends AbstractTool{
     #childTool = null
@@ -75,8 +75,10 @@ class DragTracker extends AbstractTool{
 
     }
     onDragend(event){
+        event.drawingView.endPreview()
         // const moveCommand = new moveFigureCommand(FigureToMove,newPosition);
         // this.drawingView.execute(newMoveCommand);
+        event.drawingView.updateDrawing();
     }
 }
 
