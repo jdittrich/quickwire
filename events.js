@@ -2,6 +2,7 @@
 // import for types
 import { DrawingView } from "./drawingView.js";
 import { Point } from "./geom.js";
+import {ViewTransform} from "./transform.js";
 
 /**
  * Our own mouse event. 
@@ -31,7 +32,8 @@ class LocalMouseEvent{
      * @returns {Point}
      */
     getScreenPosition(){
-        return this.#screenPosition.copy();
+        const screenPosition = this.#screenPosition.copy();
+        return screenPosition;
     }
 
     /**
@@ -39,7 +41,8 @@ class LocalMouseEvent{
      * @returns {Point}
      */
     getScreenMovement(){
-        return this.#screenPosition.offsetFrom(this.#previousPosition);
+        const screenMovement = this.#screenPosition.offsetFrom(this.#previousPosition);
+        return screenMovement
     }
 
     /**
@@ -55,8 +58,15 @@ class LocalMouseEvent{
      * @returns {Point}
      */
     getDocumentMovement(){
+        //we cant use the view’s  transform since movements are relative to previous movements, and thus should not consider pan.
+        //setup conversion only for scale, not pan
+        const viewScale = this.drawingView.getScale()
+        const transform = new ViewTransform(0,0,viewScale);
+
         const screenMovement = this.getScreenMovement()
-        const documentMovement = this.drawingView.screenToDocumentPosition(screenMovement);
+        //remember, document coordinates are the domain’s coordinates, thus, to screen is untransform!
+        const documentMovement = transform.untransformPoint(screenMovement); 
+
         return documentMovement;
     }
 
