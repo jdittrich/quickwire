@@ -8,7 +8,9 @@ class Figure extends EventTarget{
     
     /** Method called from other object. Interface to all needed drawing operations */
     draw(ctx){
-        this.drawFigure(ctx);
+        if(this.getIsVisible()){
+            this.drawFigure(ctx)
+        }
     }
     /**Called by draw(), draws the figure itself*/
     drawFigure(ctx){throw new SubclassShouldImplementError("drawFigure","Figure")}
@@ -29,6 +31,21 @@ class Figure extends EventTarget{
     getPosition(){
         const position = this.#rect.getPosition();
         return position;
+    }
+
+    /**
+     * 
+     * @param {Point} point 
+     */
+    setPosition(point){
+        const oldRect = this.getRect()
+        const newRect = new Rect({
+            width: oldRect.width,
+            height:oldRect.height,
+            x:point.x,
+            y:point.y
+        });
+        this.setRect(newRect);
     }
     //all resize/reposition functions should go through setRect
     setRect(rect){
@@ -155,7 +172,8 @@ class Figure extends EventTarget{
      * @param {Boolean} isVisible 
      */
     setIsVisible(isVisible){
-        this.#isVisible(isVisible);
+        if(typeof isVisible !== "boolean"){throw TypeError("setIsVisible parameter needs to be boolean")}
+        this.#isVisible = isVisible;
     }
 
     //#region: copy
@@ -198,8 +216,10 @@ class CompositeFigure extends Figure{
         super();
     }
     draw(ctx){
-        this.drawFigure(ctx);
-        this.drawContainedFigures(ctx);
+        if(this.getIsVisible()){
+            this.drawFigure(ctx);
+            this.drawContainedFigures(ctx);
+        }
     }
     drawFigure(){ 
         throw new SubclassShouldImplementError("drawFigure","CompositeFigure");
