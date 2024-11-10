@@ -1,3 +1,8 @@
+// PURPOSE: Geometric primitives: Point, Rectangle
+// Meant to be Value objects i.e. they should not be changeable; 
+// If you want to change a value object, you need to create a new one using the values of another or by using a method that 
+// returns a new item of the same type (e.g. substracting points from each other yields a new point)
+
 
 class Point{
     /**
@@ -21,11 +26,11 @@ class Point{
      * @returns {Point}
      */
     copy(){
-        const pointcopy = new Point({
+        const pointCopy = new Point({
             x:this.x,
             y:this.y
         })
-        return pointcopy;
+        return pointCopy;
     }
     
     /**
@@ -51,6 +56,17 @@ class Point{
             y: this.y + point.y
         });
     };
+
+    /**
+     * Creates inverse, i.e. adding this to a vector should create a point at 0,0;
+     * @returns {Point}
+     */
+    inverse(){
+        return new Point({
+            x: -1 * this.x,
+            y: -1 * this.y
+        });
+    }
     
     /**
      * Get the offset you need to add to the passed point to get to this.
