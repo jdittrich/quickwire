@@ -1,10 +1,11 @@
 import { AbstractTool } from "./abstractTool.js";
 import {LocalDragEvent, LocalMouseEvent} from '../events.js'
+import { CreateFigureCommand } from "../commands/commands.js";
 
 //Adds an element to the drawing
 //TODO: 
 // - Add the element via command. 
-class CreateElementTool extends AbstractTool{
+class CreateFigureTool extends AbstractTool{
     #figureToCreate = null;
     #previewFigure = null;
     /**
@@ -12,7 +13,8 @@ class CreateElementTool extends AbstractTool{
      */
     constructor(figureToCreate){
         super();
-        this.#figureToCreate = figureToCreate;
+        const frozenFigure = Object.freeze(figureToCreate);
+        this.#figureToCreate = frozenFigure;
     }
     /**
      * 
@@ -40,14 +42,19 @@ class CreateElementTool extends AbstractTool{
      * @param {Point} mouseDownPoint 
      */
     onDragend(event){
-        //or I only append to view() and it automatically appends to the right things?
-        const newFigure = this.#figureToCreate.copy();
-        const currentMousePoint = event.getDocumentPosition(); 
+        const documentMousePoint = event.getDocumentPosition(); 
         const documentMouseDownPoint = event.getMousedownDocumentPosition();
-        newFigure.setRectByPoints(currentMousePoint, documentMouseDownPoint); 
         
-        //call this when you want to append a figure anywhere, it figures out where to drop it?
-        this.drawingView.addFigure(newFigure);
+        const createFigureCommand = new CreateFigureCommand(
+            {
+                "newFigurePrototype": this.#figureToCreate,
+                "cornerPoint1":       documentMousePoint,
+                "cornerPoint2":       documentMouseDownPoint,
+            },
+            this.drawingView
+        );
+        //do the thing
+        this.drawingView.do(createFigureCommand);
         
         //cleanup
         this.#previewFigure = null;
@@ -55,4 +62,4 @@ class CreateElementTool extends AbstractTool{
     }
 }
 
-export {CreateElementTool}
+export {CreateFigureTool}

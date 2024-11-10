@@ -6,7 +6,7 @@ import { LocalMouseEvent } from "./events.js"
 //import { SelectionTool, NoOpTool, CreateElementTool } from "./tools.js"
 import { SelectionTool } from "./tools/selectionTool.js";
 import { NoOpTool } from "./tools/noopTool.js";
-import { CreateElementTool } from "./tools/createElementTool.js";
+import { CreateFigureTool } from "./tools/createFigureTool.js";
 
 class App{
     #canvas
@@ -52,7 +52,11 @@ class App{
         this.toolbar.addTool("selection", new SelectionTool());
         this.toolbar.addTool("noop", new NoOpTool());
         const rectFigureTemplate = new RectFigure({"x":0,"y":0,"width":10,"height":10});
-        this.toolbar.addTool("newRect", new CreateElementTool(rectFigureTemplate));
+        this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate)); 
+
+        //for debugging
+        window.drawingView = this.#drawingView;
+        window.drawing = this.#drawing;
     }
 
     #onMousedown(e){
