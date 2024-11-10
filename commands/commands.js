@@ -1,3 +1,15 @@
+
+
+import { DrawingView } from "../drawingView.js";
+import { Rect } from "../geom.js";
+
+/**
+ * Extend to create new Commands
+ *  
+ * While commands can take any number of parameters, the standard is passign a parameter obejct
+ * 
+ * Usually redo() just calls do(). 
+ */
 class Command{
     constructor(params){}
     do(){}
@@ -8,32 +20,97 @@ class Command{
 // Composite Command: allows to combine several commands, with start/end transactions: 
 // See https://freegroup.github.io/draw2d/index.html#/api/draw2d/command/commandstack
 
-class MoveCommand extends Command{
+class CreateFigureCommand extends Command{
     /**
-     * @param {Object} params 
-     * @param {Point}  params.toPosition
-     * @param {Figure} params.toContainer
+     * @param {Object}          params
+     * @param {Figure}          params.newFigurePrototype - do not use directly, copy() it. 
+     * @param {Point}           params.cornerPoint1 
+     * @param {Point}           params.cornerPoint2   
      */
-    constructor(figure,params){
-        super();
-        const {toPosition, toContainer} = params;
-        if(!figure||!toPosition|| !toContainer){
-            throw Error(`tried to create new MoveCommand, but at least one of toPosition ${toPosition} and toContainer ${toContainer} was not defined`);
-        }
+
+    #newFigure
+    #newFigureRect
+    #appendFigures
+    #toContainer 
+
+    constructor(params,drawingView){
+        super()
+        const {cornerPoint1, cornerPoint2, newFigurePrototype} = params; 
         
-        this.figure = figure;
-        this.fromPosition = figure.getPosition();
-        this.fromContainer = figure.getContainer()
-        this.toPosition = toPosition;
-        this.toContainer = toContainer;
+        const newFigureRect = Rect.createFromCornerPoints(cornerPoint1, cornerPoint2);
+        //TODO: the enclosed figures seem not to work yet 9.11.24
+        const {rectEnclosesFigures, rectEnclosedByFigure} = drawingView.drawing.findFiguresEnclosingAndEnclosed(newFigureRect);
+
+        //create figure
+        const newFigure = newFigurePrototype.copy();
+        this.#newFigureRect = newFigureRect;
+        this.#newFigure = newFigure;
+        this.#appendFigures= rectEnclosesFigures;
+        this.#toContainer = rectEnclosedByFigure;
     }
     do(){
-        this.figure.setPosition(this.toPosition);
-        this.toContainer.appendFigure(this.figure);
+        console.log("appending figures:", this.#appendFigures);
+        this.#newFigure.setRect(this.#newFigureRect);
+        this.#toContainer.appendFigure(this.#newFigure);
+        this.#newFigure.appendFigures(this.#appendFigures); 
     }
     undo(){
-        this.figure.setPosition(this.fromPosition);
-        this.fromContainer.appendFigure(this.figure);
+        //reattach formerly contained figures
+        this.#appendFigures.appendFigures(this.#toContainer);
+        
+        //detach figure
+        this.#toContainer.detachFigure(this.#newFigure);
+    }
+    redo(){
+        this.do();
+    }
+
+}
+
+//TODO: Move command does not properly consider pan! 10.11.24
+class MoveFigureCommand extends Command{
+    #figure
+    #fromContainer
+    #toContainer
+    #moveBy
+    #appendFigures
+    
+    /**
+     * @param {Object} params
+     * @param {Figure} params.figure
+     * @param {Point}  params.moveBy
+     * @param {DrawingView} drawingView
+     */
+    constructor(params, drawingView){
+        super();
+        const {moveBy, figure} = params;
+        if(!figure||!moveBy || !drawingView){
+            throw Error(`tried to create new MoveCommand, but at least one parameter was not defined`);
+        }
+        //store figure,  moveBy and current Container
+        this.#figure = figure;
+        this.#moveBy = moveBy;
+        this.#fromContainer = figure.getContainer();
+
+        //find new container and enclosed figures at new position
+        const newFigureRect = figure.getRect().movedCopy(moveBy);
+        const {rectEnclosesFigures, rectEnclosedByFigure} = drawingView.drawing.findFiguresEnclosingAndEnclosed(newFigureRect);
+        //actually, having the function only take rect makes a lot of sense ↑, so we do not move the figure to do calculations for the unmoved figure etc. 
+        this.#toContainer = rectEnclosedByFigure;
+        this.#appendFigures = rectEnclosesFigures; //these are figures currently contained by #toContainer, but we will append them to figure. 
+    }
+    do(){
+        console.log("appending figures:", this.#appendFigures);
+        this.#figure.movePositionBy(this.#moveBy);
+        this.#figure.appendFigures(this.#appendFigures);
+        this.#toContainer.appendFigure(this.#figure);
+    }
+    undo(){
+        const moveByInverse = this.#moveBy.inverse();
+        
+        this.#fromContainer.appendFigures(this.#appendFigures);
+        this.#figure.movePositionBy(moveByInverse);
+        this.#fromContainer.appendFigure(this.#figure);
     }
     redo(){
         this.do();
@@ -70,6 +147,7 @@ class CommandStack extends EventTarget{
         command.do();
         this.#undoStack.unshift(command);
         this.#redoStack = [] //every new command flushes redo
+        //redraw
     }
 
     /**
@@ -79,6 +157,7 @@ class CommandStack extends EventTarget{
         if(this.canUndo() === false){return} //this fails silently… good or bad?
         const commandToUndo = this.#undoStack.shift();
         this.#redoStack.unshift(commandToUndo);
+        //redraw
     }
 
     /**
@@ -89,5 +168,8 @@ class CommandStack extends EventTarget{
         const commandToRedo = this.#redoStack.shift();
         commandToRedo.redo();
         this.#undoStack.unshift(commandToRedo);
+        //redraw
     }
 }
+
+export {CommandStack, MoveFigureCommand, CreateFigureCommand}

@@ -1,7 +1,8 @@
 import {ViewTransform} from './transform.js'
 import { NoOpTool } from './tools/noopTool.js'
-import { LocalMouseEvent, LocalDragEvent } from './events.js'
+import {LocalMouseEvent, LocalDragEvent } from './events.js'
 import {NoOpFigure} from './figures.js'
+import { CommandStack, CreateFigureCommand } from './commands/commands.js'
 
 //used as types
 import { Drawing } from './drawing.js'
@@ -24,9 +25,11 @@ import {Point} from './geom.js'
  */
 class DrawingView{
     //private properties used in constructor
-    #ctx
-    #transform
-    #ctxSize = null;
+    #ctx          = null; 
+    #transform    = null; 
+    #ctxSize      = null;
+    #commandStack = null;
+
     /**
      * 
      * @param {RenderingContext2D } ctx 
@@ -42,10 +45,12 @@ class DrawingView{
         this.#ctx = ctx;
         this.drawing = drawing;
         this.#drawAll()
-        
 
         //tools
         this.changeTool(new NoOpTool())
+
+        //command stack
+        this.#commandStack = new CommandStack();
     }
     setCtxSize(ctxSize){
         this.#ctxSize = ctxSize;
@@ -322,7 +327,36 @@ class DrawingView{
        figure.remove();
     }
 
-    //region hit tests
+    /**
+     * execute a new command and put it on stack for undoable actions
+     * @param {Command} command 
+     */
+    do(command){
+        this.#commandStack.do(command)
+    }
+
+    /**
+     * @returns {Boolean}
+     */
+    canUndo(){
+        const canUndo = this.#commandStack.canUndo();
+        return canUndo;
+    }
+
+    /**
+     * @returns {Boolean}
+     */
+    canRedo(){
+        const canRedo = this.#commandStack.canRedo();
+        return canRedo;
+    }
+
+    undo(){
+        this.#commandStack.undo();
+    }
+    redo(){
+        this.#commandStack.redo();
+    }
     
 }
 
