@@ -150,13 +150,22 @@ class Figure extends EventTarget{
     }
 
     /**
-     * @param {Figure}
+     * @param {Figure} figure 
      * @returns {Boolean} true if figure entirely inside, otherwise false
      */
     enclosesFigure(figure){
         const  otherFigureRect = figure.getRect();
-        const  doesThisContainFigure = this.#rect.enclosesRect(otherFigureRect);
-        return doesThisContainFigure; 
+        const  doesThisEncloseFigure = this.enclosesRect(otherFigureRect);
+        return doesThisEncloseFigure; 
+    }
+
+    /**
+     * @param {Rect} rect 
+     * @returns {Boolean} true if rect is entirely inside, otherwise false
+     */
+    enclosesRect(rect){ 
+        const doesThisEncloseRect = this.#rect.enclosesRect(rect);
+        return doesThisEncloseRect;
     }
     //# region visibility
     #isVisible = true
@@ -236,7 +245,7 @@ class CompositeFigure extends Figure{
      */
     appendFigure(figureToAppend){
         if(!this.enclosesFigure(figureToAppend)){
-            new Error("can't append a figure that would be outside of container")
+            new Error(`can't append a figure that would be outside of container. If you append after a change of a figure e.g. drag, change the figure first, then append, not vice versa`);
         }
 
         if(this.#isCircularRelation(figureToAppend)){
@@ -245,12 +254,33 @@ class CompositeFigure extends Figure{
         
         if(figureToAppend.getContainer()){
            const currentContainer = figureToAppend.getContainer();
-           currentContainer.removeFigure(figureToAppend);
+           currentContainer.detachFigure(figureToAppend);
         }
    
         this.#addToCollection(figureToAppend);
        
         figureToAppend.setContainer(this);
+    }
+
+    /**
+     * @param {Figure[]} figuresToAppend 
+     */
+    appendFigures(figuresToAppend){
+        //first check circularity for all, preventing that a part is appended before the error
+        const circularityChecks = figuresToAppend.map(figure=>this.#isCircularRelation(figure));
+        const atLeastOneCircular = circularityChecks.includes(true);
+        if(atLeastOneCircular){
+            throw new Error("Can’t append: At least one proposed Child is its own ancestor, would create circular hierarchy.")
+        }
+
+        const containmentChecks = figuresToAppend.map(figure=>this.enclosesFigure(figure));
+        const atLeastOneOutside = containmentChecks.includes(false);
+        if(atLeastOneOutside){
+            throw new Error("Can’t append: At least one proposed Child is outside the this figure")
+        }
+
+        //but if all checks pass: 
+        figuresToAppend.forEach(figure=>this.appendFigure(figure));
     }
 
     /**
@@ -325,6 +355,13 @@ class CompositeFigure extends Figure{
         const containedFigures = this.getContainedFigures();
         containedFigures.forEach(figure=>figure.movePositionBy(point));
     }
+
+    setPosition(point){
+        const currentPosition = this.getPosition();
+        const moveBy = currentPosition.offsetTo(point);
+        this.movePositionBy(moveBy);
+    }
+
     /**
      * Helper
      * @returns {Array} with toJSONs of contained figures.

@@ -58,27 +58,22 @@ function findFiguresBelowPoint(rootFigure,point, includeRoot){
 
 /**
  * @param {Figure} rootFigure - can be any figure, often the root of the whole document. 
- * @param {Figure} enclosedFigure - the figure that is enclosed
- * @param {Boolean} includeRoot - should root be included in the results if it matches the test?
+ * @param {Figure} enclosedRect - the figure that is enclosed
  * @returns {array} of figures enclosing the rect, starting with the innermost enclosing rect.
- * 
- * 
  */
-function findEnclosingFigures(rootFigure,enclosedFigure, includeRoot){
-    const enclosingFigures = figureWalkTreeLazy(rootFigure,enclosedFigure,(figure,enclosedFigure)=>{
-        const figureEncloses = figure.enclosesFigure(enclosedFigure)
-        return figureEncloses;
-    })
-    if(!includeRoot){
-        enclosingFigures.pop(); //removes last element –  the root figure/document
-    }
+function findEnclosingFigures(rootFigure,testRect){
+    const enclosingFigures = figureWalkTreeLazy(rootFigure,testRect,(figure,testRect)=>{
+        const isFigureEnclosingRect = figure.enclosesRect(testRect);
+        return isFigureEnclosingRect;
+    });
+
     return enclosingFigures;
 }
 
 /**
  * 
  * @param {Figure} rootFigure 
- * @param {Figure} enclosingFigure for test
+ * @param {Rect} enclosingRect for test
  * @returns a list of figures that the enclosingFigure encloses.
  * 
  * Example: 
@@ -102,9 +97,9 @@ function findEnclosingFigures(rootFigure,enclosedFigure, includeRoot){
  * +---------------------------------------+
  * 
  */
-function findEnclosedFigures(rootFigure, enclosingFigure){
-    //find all figures that enclose the enclosingFigure
-    const enclosingFigures = findEnclosingFigures(rootFigure,enclosingFigure,false);
+function findEnclosedFigures(rootFigure, enclosingRect){
+    //find all figures that enclose the enclosingRect
+    const enclosingFigures = findEnclosingFigures(rootFigure,enclosingRect,true);
 
     if(enclosingFigures.length === 0){
         return [] //no matches
@@ -114,12 +109,29 @@ function findEnclosedFigures(rootFigure, enclosingFigure){
     const innermostEnclosing = enclosingFigures[0];
 
     //check if any of the children of the innermost enclosing figure are fully inside the enclosingFigure
-    const innerMatches = innermostEnclosing.getChildren().filter(child=>enclosingFigure.enclosesFigure(child));
+    const innerMatches = innermostEnclosing.getContainedFigures().filter((figure)=>{
+        const rect = figure.getRect();
+        const isMatch = enclosingRect.enclosesRect(rect);
+        return isMatch; 
+    });
 
     return innerMatches;
 }
 
+function findFiguresEnclosingAndEnclosed(rootFigure,testRect){
+    const enclosingFigures = findEnclosingFigures(rootFigure,testRect);
+    const innermostEnclosing = enclosingFigures[0];
+    const innerMatches = innermostEnclosing.getContainedFigures().filter((figure)=>{
+        const rect = figure.getRect();
+        const isMatch = testRect.enclosesRect(rect);
+        return isMatch;
+    });
 
+    return {
+        "rectEnclosesFigures":innerMatches,
+        "rectEnclosedByFigure":innermostEnclosing
+    }
+}
 
 
 /**
@@ -157,4 +169,4 @@ function findEnclosedFigures(rootFigure, enclosingFigure){
 //     return innerMatches;
 // }
 
-export {figureWalkTreeLazy, findFiguresBelowPoint, findEnclosingFigures, findEnclosedFigures};
+export {figureWalkTreeLazy, findFiguresBelowPoint, findEnclosingFigures, findEnclosedFigures,findFiguresEnclosingAndEnclosed};
