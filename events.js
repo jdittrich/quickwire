@@ -4,6 +4,9 @@ import { DrawingView } from "./drawingView.js";
 import { Point } from "./geom.js";
 import {ViewTransform} from "./transform.js";
 
+// TODO: 10.11.24: Maybe put the relative movement conversion that does consider zoom but not drag into its own function,
+// either here or on view?
+
 /**
  * Our own mouse event. 
  * It does not depend on the DOM mouse events (except for calculating the initial mouse position)
@@ -58,7 +61,7 @@ class LocalMouseEvent{
      * @returns {Point}
      */
     getDocumentMovement(){
-        //we cant use the view’s  transform since movements are relative to previous movements, and thus should not consider pan.
+        //we cant use the view’s  transform since movements are relative to each other, and thus should not consider pan.
         //setup conversion only for scale, not pan
         const viewScale = this.drawingView.getScale()
         const transform = new ViewTransform(0,0,viewScale);
@@ -96,14 +99,14 @@ class LocalDragEvent extends LocalMouseEvent{
      * @param {Point}       params.screenPosition - where the event on the view happened in screen coordinates (in contrast to document coordinates)
      * @param {Point}       params.previousPosition
      * @param {DrawingView} params.view - needs access to point transformation methods of view.
-     * @param {Point}       params.downpoint
+     * @param {Point}       params.downPoint
      */
     constructor(params){
         super(params);
         if(!params.downPoint){
-            throw new Error("Downpoint not passed");
+            throw new Error("downPoint not passed");
         }
-        this.#downPoint = params.downPoint
+        this.#downPoint = params.downPoint;
     }
     getMousedownScreenPosition(){
        return this.#downPoint;
@@ -128,9 +131,16 @@ class LocalDragEvent extends LocalMouseEvent{
      * @returns {Point}
      */
     getDocumentDragMovement(){
-        const screenMovement = this.getScreenMovement();
-        const drawingView = this.getDrawingView();
-        const documentDragMovement = drawingView.screenToDocumentPosition(screenMovement);
+        //we cant use the view’s  transform since movements are relative to each other, and thus should not consider pan 
+        //i.e. the drag does not get shorter or longer, when when the panned.
+        //thus: setup conversion only for scale, not pan
+        const viewScale = this.drawingView.getScale()
+        const transform = new ViewTransform(0,0,viewScale);
+
+        const screenDragMovement = this.getScreenDragMovement()
+        //remember, document coordinates are the domain’s coordinates, thus, to screen is untransform!
+        const documentDragMovement = transform.untransformPoint(screenDragMovement); 
+
         return documentDragMovement
     }
 }
