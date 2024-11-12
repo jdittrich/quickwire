@@ -3,6 +3,7 @@ import { NoOpTool } from './tools/noopTool.js'
 import {LocalMouseEvent, LocalDragEvent } from './events.js'
 import {NoOpFigure} from './figures.js'
 import { CommandStack, CreateFigureCommand } from './commands/commands.js'
+import {Selection} from './selection.js';
 
 //used as types
 import { Drawing } from './drawing.js'
@@ -29,6 +30,7 @@ class DrawingView{
     #transform    = null; 
     #ctxSize      = null;
     #commandStack = null;
+    #selection    = null; 
 
     /**
      * 
@@ -44,13 +46,13 @@ class DrawingView{
         this.setCtxSize(size);//needed to know which area to clear on redraws
         this.#ctx = ctx;
         this.drawing = drawing;
-        this.#drawAll()
-
-        //tools
-        this.changeTool(new NoOpTool())
-
-        //command stack
+        
         this.#commandStack = new CommandStack();
+        this.#selection = new Selection();
+        
+        this.changeTool(new NoOpTool())
+        
+        this.#drawAll()
     }
     setCtxSize(ctxSize){
         this.#ctxSize = ctxSize;
@@ -72,6 +74,10 @@ class DrawingView{
     }
     #drawHandles(){
         this.#ctx.fillText("drawingHandlesWorks", 10,10);
+
+        //TODO: Handles
+        //const handles = this.#selection.getHandles();
+        //handles.forEach(handle=> handle.draw());
     }
 
     //#region: previews
@@ -235,8 +241,6 @@ class DrawingView{
             } else  {
                 this.#onDrag(localDragEvent);
             }
-
-
         }
         
         this.#previousMousePosition = mousePosition.copy();
@@ -353,11 +357,28 @@ class DrawingView{
 
     undo(){
         this.#commandStack.undo();
+        this.updateDrawing();
     }
     redo(){
         this.#commandStack.redo();
+        this.updateDrawing();
+    }
+
+    //#region: selection
+    select(figure){
+        this.#selection.select(figure);
+        this.updateDrawing();
+    }
+    clearSelection(){
+        this.#selection.clear();
+        this.updateDrawing();
+    }
+    hasSelection(){
+        const hasSelection = this.#selection.hasSelection();
+        return hasSelection; 
     }
     
+
 }
 
 export {DrawingView}
