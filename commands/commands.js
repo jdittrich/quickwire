@@ -56,7 +56,7 @@ class CreateFigureCommand extends Command{
     }
     undo(){
         //reattach formerly contained figures
-        this.#appendFigures.appendFigures(this.#toContainer);
+        this.#toContainer.appendFigures(this.#appendFigures)
         
         //detach figure
         this.#toContainer.detachFigure(this.#newFigure);
@@ -156,8 +156,8 @@ class CommandStack extends EventTarget{
     undo(){
         if(this.canUndo() === false){return} //this fails silently… good or bad?
         const commandToUndo = this.#undoStack.shift();
+        commandToUndo.undo();
         this.#redoStack.unshift(commandToUndo);
-        //redraw
     }
 
     /**
@@ -168,7 +168,6 @@ class CommandStack extends EventTarget{
         const commandToRedo = this.#redoStack.shift();
         commandToRedo.redo();
         this.#undoStack.unshift(commandToRedo);
-        //redraw
     }
 }
 
