@@ -53,7 +53,8 @@ class App{
         this.toolbar.addTool("noop", new NoOpTool());
         const rectFigureTemplate = new RectFigure({"x":0,"y":0,"width":10,"height":10});
         this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate)); 
-
+        this.toolbar.addAction("undo",function(drawingView){drawingView.undo()});
+        this.toolbar.addAction("redo",function(drawingView){drawingView.redo()});
         //for debugging
         window.drawingView = this.#drawingView;
         window.drawing = this.#drawing;
@@ -115,6 +116,7 @@ class App{
     }
 }
 
+
 class Toolbar{
     domElement = null; 
 
@@ -125,22 +127,46 @@ class Toolbar{
         this.drawingView = drawingView;
     }
     addTool(label, tool){
-        const button = new ToolbarButton(label, tool,this.drawingView)
+        const button = new ToolbarToolButton(label, this.drawingView, tool);
+        this.domElement.append(button.domElement);
+    }
+    addAction(label,callback){
+        const button = new ToolbarActionButton(label, this.drawingView, callback);
         this.domElement.append(button.domElement);
     }
 }
 
 class ToolbarButton{
     domElement = null;
-    constructor(label, tool, view){
-        const changeTool = function(){
-            view.changeTool(tool)
-        }
+    constructor(label){
+        
         const htmlButton = document.createElement("button");
         htmlButton.innerText = label;
-        htmlButton.className = "qwToolbarButton"
-        htmlButton.addEventListener("click",changeTool,false)
+        htmlButton.className = "qwToolbarButton";
+        htmlButton.style = "margin-right:2px; height:1.8rem";
         this.domElement = htmlButton;
+    }
+}
+
+class ToolbarToolButton extends ToolbarButton{
+    constructor(label, drawingView, tool){
+        super(label);
+        
+        const changeTool = function(){
+            drawingView.changeTool(tool)
+        }
+        this.domElement.addEventListener("click", changeTool,false);
+    }
+
+}
+
+class ToolbarActionButton extends ToolbarButton{
+    constructor(label, drawingView, callback){
+        super(label);
+        const callAction = function(){
+            callback(drawingView)
+        }
+        this.domElement.addEventListener("click", callAction,false);
     }
 }
 
