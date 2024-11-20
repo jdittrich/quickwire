@@ -74,6 +74,8 @@ class App{
     }
     
     #onWheel(e){
+       e.preventDefault();//otherwise everything browser-zooms in addition!
+
        let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
         
        //Normalize to -1 (wheel moved to user), +1 (wheel moved from user) 
