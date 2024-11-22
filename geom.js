@@ -147,6 +147,37 @@ class Rect{
     }
 
     /**
+     * Returns the corner points
+     * @returns {Object} corners 
+     * @returns {Point} corners.topright
+     * @returns {Point} corners.bottomright
+     * @returns {Point} corners.bottomleft
+     * @returns {Point} corners.topleft
+     */
+    getCorners(){
+        const corners = {
+            "topright":new Point({
+                "x":this.x + this.width,
+                "y":this.y
+            }),
+            "bottomright": new Point({
+                "x":this.x + this.width,
+                "y":this.y + this.height
+            }),
+            "bottomleft": new Point({
+                "x":this.x,
+                "y":this.y + this.height
+            }),
+            "topleft": new Point({
+                "x":this.x,
+                "y":this.y
+            })
+        };
+
+        return corners;
+    }
+    
+    /**
      * Returns a rectangle with same width, height and the position translated by the coordinates in moveBy
      * @param {Point} moveBy
      * @return {Rect}
