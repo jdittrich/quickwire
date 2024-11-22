@@ -59,7 +59,7 @@ class Figure extends EventTarget{
      */
     setRectByPoints(point1,point2){
         const newRect = Rect.createFromCornerPoints(point1, point2);
-        this.#rect = newRect;
+        this.setRect(newRect);
     }
     
     /**
@@ -69,13 +69,19 @@ class Figure extends EventTarget{
        const rectCopy = this.#rect.copy(); 
        return rectCopy;
     }
-    
+
+    /**
+    * @returns {Rect} 
+    */
+    changeRect(rect){ //not sure if this is a great name, I have changeRect and setRect. However, hotdraw had something similar, [methodname]basic or so for low level. 
+        this.setRect(rect);
+    }
+
     //#region Handles factory
     
     /**Returns a list of handles of the figure */ 
     getHandles(){
-        throw new Error("getHandles called, but I did not implement it yet");//TODO
-        //direct creation or factory
+        return []; //standard implementation is empty array, thus providing a common type. 
     }
 
     //#region append to compositeFigure
@@ -349,17 +355,32 @@ class CompositeFigure extends Figure{
     movePositionBy(point){
         const oldRect =  this.getRect();
         const newRect = oldRect.movedCopy(point);
-        this.setRect(newRect);
+        this.changeRect(newRect);
         
         //move contained Figures
-        const containedFigures = this.getContainedFigures();
-        containedFigures.forEach(figure=>figure.movePositionBy(point));
+        // const containedFigures = this.getContainedFigures();
+        // containedFigures.forEach(figure=>figure.movePositionBy(point));
     }
 
-    setPosition(point){
+    setPosition(point){ //TODO: go through changeRect
         const currentPosition = this.getPosition();
         const moveBy = currentPosition.offsetTo(point);
         this.movePositionBy(moveBy);
+    }
+
+    /**
+     * For repositioning and resizing.
+     * @param {Rect} rect 
+     */
+    changeRect(changedRect){
+        const oldRect = this.getRect();
+        const oldPosition = oldRect.getPosition();
+        const newPosition = changedRect.getPosition();
+        const moveBy = oldPosition.offsetTo(newPosition);
+        this.setRect(changedRect);
+
+        const containedFigures = this.getContainedFigures();
+        containedFigures.forEach(figure=>figure.movePositionBy(moveBy));
     }
 
     /**
@@ -404,6 +425,10 @@ class RectFigure extends CompositeFigure{
         return rectFigureJson;
     }
 
+    getHandles(){
+        return [];
+    }
+
     /**
      * @see {Figure.toString}
      * @returns {String}
@@ -432,4 +457,4 @@ class RectFigure extends CompositeFigure{
     }
 }
 
-export {CompositeFigure, RectFigure, NoOpFigure}
+export {Figure, CompositeFigure, RectFigure, NoOpFigure}
