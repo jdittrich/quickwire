@@ -156,19 +156,19 @@ class Rect{
      */
     getCorners(){
         const corners = {
-            "topright":new Point({
+            "topRight":new Point({
                 "x":this.x + this.width,
                 "y":this.y
             }),
-            "bottomright": new Point({
+            "bottomRight": new Point({
                 "x":this.x + this.width,
                 "y":this.y + this.height
             }),
-            "bottomleft": new Point({
+            "bottomLeft": new Point({
                 "x":this.x,
                 "y":this.y + this.height
             }),
-            "topleft": new Point({
+            "topLeft": new Point({
                 "x":this.x,
                 "y":this.y
             })
