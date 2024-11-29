@@ -73,11 +73,10 @@ class DrawingView{
         this.#ctx.resetTransform(); //so the next one can deal with an untransformed canvas.
     }
     #drawHandles(){
-        this.#ctx.fillText("drawingHandlesWorks", 10,10);
-
-        //TODO: Handles
-        //const handles = this.#selection.getHandles();
-        //handles.forEach(handle=> handle.draw());
+        if(this.#dragging){return}
+        //if(!this.#selection.hasSelection()){return}
+        const handles = this.getHandles(this);
+        handles.forEach(handle=> handle.draw(this.#ctx));
     }
 
     //#region: previews
@@ -257,7 +256,8 @@ class DrawingView{
         })
 
         //check if drag ends, and call this first.
-        if(this.#mouseDownPoint && this.#dragging){ 
+        if(this.#mouseDownPoint && this.#dragging){
+            this.#dragging = false //end drag 
             const localDragEvent = new LocalDragEvent({
                 "screenPosition":mousePosition,
                 "previousPosition":this.#previousMousePosition,
@@ -268,9 +268,9 @@ class DrawingView{
         }
         this.#tool.onMouseup(localMouseEvent)
         
+        
         //resets
         this.#mouseDownPoint = null;
-        this.#dragging = false
         this.#previousMousePosition = mousePosition.copy();
     }
 
@@ -377,7 +377,22 @@ class DrawingView{
         const hasSelection = this.#selection.hasSelection();
         return hasSelection; 
     }
+    getSelection(){
+        const selection = this.#selection.getSelection();
+        return selection;
+    }
     
+    /**
+     * @returns {Handle[]} array with 0 or more handles
+     */
+    getHandles(){
+        let handles = [];
+        const selectedFigure = this.#selection.getSelection();
+        if(selectedFigure){
+            handles = selectedFigure.getHandles(this);
+        }   
+        return handles;
+    }
 
 }
 
