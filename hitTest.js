@@ -58,7 +58,7 @@ function findFiguresBelowPoint(rootFigure,point, includeRoot){
 
 /**
  * @param {Figure} rootFigure - can be any figure, often the root of the whole document. 
- * @param {Figure} enclosedRect - the figure that is enclosed
+ * @param {Figure} testRect - the figure that is enclosed
  * @returns {array} of figures enclosing the rect, starting with the innermost enclosing rect.
  */
 function findEnclosingFigures(rootFigure,testRect){
@@ -119,9 +119,11 @@ function findEnclosedFigures(rootFigure, enclosingRect){
 }
 
 function findFiguresEnclosingAndEnclosed(rootFigure,testRect){
-    const enclosingFigures = findEnclosingFigures(rootFigure,testRect);
-    const innermostEnclosing = enclosingFigures[0];
-    const innerMatches = innermostEnclosing.getContainedFigures().filter((figure)=>{
+    const enclosingFigures = findEnclosingFigures(rootFigure,testRect);//all figures that fully enclose the testRect
+    const innermostEnclosing = enclosingFigures[0]; //innermost enclosing figure
+
+    //collects all figures that are contained in the innermostEnclosing figure and also enclosed by the testRect → should be added
+    const innerMatches = innermostEnclosing.getContainedFigures().filter((figure)=>{ 
         const rect = figure.getRect();
         const isMatch = testRect.enclosesRect(rect);
         return isMatch;
