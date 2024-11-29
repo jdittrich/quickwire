@@ -105,12 +105,35 @@ class MoveFigureCommand{
     }
 }
 
+/* NOTE 
+An alternative might be sending a 
+top/right/bottom/left object that defines the change like
+top:-10 
+
+*/
+
+class ResizeFigureCommand2{
+    /**
+     * @param {Object} resizeFigureParams
+     * @param {Object} resizeFigureParams.sidesChanges
+     * @param {Number} resizeFigureParams.sidesChanges.top
+     * @param {Number} resizeFigureParams.sidesChanges.right
+     * @param {Number} resizeFigureParams.sidesChanges.bottom
+     * @param {Number} resizeFigureParams.sidesChanges.left
+     * @returns 
+     */
+    constructor(sideChanges,drawingView){
+        
+    }
+}
+
+
 class ResizeFigureCommand{
     /**
      * @param {Object} resizeFigureParams
      * @param {Point} resizeFigureParams.resizeBy - document coordinates
      * @param {string} resizeFigureParams.direction - coordinates: top, topright,right,bottomright, bottom, bottomleft, left, topleft
-     * @returns 
+     * @returns {ChangeFigureRectCommand}
      */
     constructor(resizeFigureParams, drawingView){
         const figure = resizeFigureParams.figure;
@@ -202,6 +225,7 @@ class ChangeFigureRectCommand extends Command{
     #changedRect
     #oldRect
     #appendFigures
+    #figuresNotContainedAnymore
     /**
      * @param {Object} params
      * @param {Figure} params.figure
@@ -221,20 +245,45 @@ class ChangeFigureRectCommand extends Command{
         this.#oldRect = figure.getRect();
         this.#changedRect = changedRect;
 
+        const oldPosition = this.#oldRect.getPosition();
+        const newPosition = this.#changedRect.getPosition();
+        const positionChange = oldPosition.offsetTo(newPosition);
+    
+
         //find new container and enclosed figures at new position/size of rectangle
         const {rectEnclosesFigures, rectEnclosedByFigure} = drawingView.drawing.findFiguresEnclosingAndEnclosed(changedRect);
+
+        // find out which contained figures are not contained anymore after the change 
+        // (e.g. after making the rect much smaller)
+        // these need to be appended to the figures enclosing figure ("parent"), ie. #toContainer
+        const currentlyContainedFigures = figure.getContainedFigures(); 
+        const figuresNotContainedAnymore = currentlyContainedFigures.filter((containedFigure)=>{
+            const containedFigureRect = containedFigure.getRect();
+            const containedFigureRectAfterMove = containedFigureRect.movedCopy(positionChange);
+            
+            // with the rect of the parent changing and the contained figures moved along, 
+            // are the child figures still inside the rect?
+            const  isContained = this.#changedRect.enclosesRect(containedFigureRectAfterMove)
+            const  isNotContained = !isContained;
+            return isNotContained;
+        })
+
+        this.#figuresNotContainedAnymore = figuresNotContainedAnymore;
         this.#toContainer = rectEnclosedByFigure;
         this.#appendFigures = rectEnclosesFigures;
     }
     do(){
-        this.#figure.changeRect(this.#changedRect);
-        this.#figure.appendFigures(this.#appendFigures);
-        this.#toContainer.appendFigure(this.#figure);
+        this.#figure.changeRect(this.#changedRect); //moves also the currently contained figures
+        this.#figure.appendFigures(this.#appendFigures); //appends figures that are enclosed in the new Rectangle
+        this.#toContainer.appendFigures(this.#figuresNotContainedAnymore); //if new rectangle is smaller, some figures might not be enclosed anymore
+        this.#toContainer.appendFigure(this.#figure); //append figure to its new container.
     }
     undo(){        
         this.#fromContainer.appendFigures(this.#appendFigures);
         this.#figure.changeRect(this.#oldRect);
+        this.#figure.appendFigures(this.#figuresNotContainedAnymore); //reappend figures that are included again in the changed rect
         this.#fromContainer.appendFigure(this.#figure);
+        
     }
     redo(){
         this.do();
@@ -296,4 +345,4 @@ class CommandStack extends EventTarget{
     }
 }
 
-export {CommandStack, MoveFigureCommand, ResizeFigureCommand, CreateFigureCommand}
+export {CommandStack, MoveFigureCommand, ResizeFigureCommand, CreateFigureCommand, ChangeFigureRectCommand}
