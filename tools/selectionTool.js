@@ -10,14 +10,28 @@ class SelectionTool extends AbstractTool{
     onMousedown(event){
         //are we over a figure?
         const currentPositionDocument = event.getDocumentPosition();
+        
         const figuresEnclosingPoint = this.drawingView.drawing.findFiguresEnclosingPoint(currentPositionDocument);
-        //if we are not over a figure, go to pan mode
-        if(figuresEnclosingPoint.length === 0){//no figures under mouse
+        
+        const handles = this.drawingView.getHandles();
+        const handleUnderPoint = handles.find(handle=> handle.enclosesPoint(currentPositionDocument))
+        
+        if(handleUnderPoint){
+            //if we are over a handle, keep selection, change handle
+            this.#childTool = new HandleTracker(handleUnderPoint);
+        } else if (figuresEnclosingPoint.length === 0){//no figures under mouse
+            //if we are not over a figure, unselect and go to pan mode
+            this.drawingView.clearSelection();
             this.#childTool = new PanTracker();
-        } else { //if we are over a figure, go do drag mode
-            const immermostFigure = figuresEnclosingPoint[0];
-            this.#childTool = new DragTracker(immermostFigure);
+        } else if(figuresEnclosingPoint.length > 0){ //at least one figure under mouse
+            //if we are over a figure, select and go do drag mode
+            const innermostFigure = figuresEnclosingPoint[0];
+            this.drawingView.select(innermostFigure);
+            this.#childTool = new DragTracker(innermostFigure);
+        } else {
+            throw new Error("one of the above conditions should always be the case");
         }
+
         this.#childTool.onMousedown(event);
     }
     onMousemove(event){
@@ -63,7 +77,7 @@ class DragTracker extends AbstractTool{
         this.#figureToDrag = figureToDrag;
     }
     onDragstart(event){
-        event.drawingView.startPreviewOf(this.#figureToDrag); 
+        event.drawingView.startPreviewOf(this.#figureToDrag);
     }
     /**
      * @param {LocalDragEvent} event 
@@ -91,13 +105,23 @@ class DragTracker extends AbstractTool{
 }
 
 class HandleTracker extends AbstractTool{
-    #handle 
+    #handleToDrag = null
     constructor(handle){
         super();
-        this.#handle = handle
+        this.#handleToDrag = handle;
     }
-
-    //figure.rectByPoints(… …)
+    onDragstart(dragEvent){
+        this.#handleToDrag.onDragstart(dragEvent)
+        dragEvent.drawingView.updateDrawing();
+    }
+    onDrag(dragEvent){
+        this.#handleToDrag.onDrag(dragEvent);
+        dragEvent.drawingView.updateDrawing();
+    }
+    onDragend(dragEvent){
+        this.#handleToDrag.onDragend(dragEvent);
+        dragEvent.drawingView.updateDrawing();
+    }
 }
 
 export {SelectionTool}
