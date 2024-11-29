@@ -1,5 +1,6 @@
 import {Rect, Point} from './geom.js';
 import { SubclassShouldImplementError } from './errors.js';
+import { createAllResizeHandles } from './handles.js';
 
 class Figure extends EventTarget{
     constructor(){
@@ -80,7 +81,21 @@ class Figure extends EventTarget{
     //#region Handles factory
     
     /**Returns a list of handles of the figure */ 
-    getHandles(){
+    getHandles(drawingView){
+        /**
+         * NOTE on Architecture: 
+         * Why do we need to pass drawing view here?
+         * figures do not need to know drawingView (so far)
+         * thery just need to know how to draw themselves and where they
+         * are in document coordinates. 
+         * Handles, however do need to know how to draw themselves in relation 
+         * to the drawingViews zoom! Handles are always the same size, no matter 
+         * how far we zoomed in or out – this is relevant for drawing and hot testing
+         * 
+         * I could also have the figure return view-independend handle data 
+         * and selection draws them and hit-tests.
+         *  
+         */
         return []; //standard implementation is empty array, thus providing a common type. 
     }
 
@@ -356,10 +371,6 @@ class CompositeFigure extends Figure{
         const oldRect =  this.getRect();
         const newRect = oldRect.movedCopy(point);
         this.changeRect(newRect);
-        
-        //move contained Figures
-        // const containedFigures = this.getContainedFigures();
-        // containedFigures.forEach(figure=>figure.movePositionBy(point));
     }
 
     setPosition(point){ //TODO: go through changeRect
@@ -403,13 +414,18 @@ class RectFigure extends CompositeFigure{
             "width":width,
             "height":height
         }));
+
+        // TODO: needs a map that returns the "real" objects based on JSON
+        // but how do I generate objects of an unknown class?
+        // CODE draft:
+        // const containedFigures = params.containedFigures.map(…
+        // I assume I need some repository matching strings with classes
+        // so I can retrieve them
+        // 
     }
     drawFigure(ctx){
-        //pre draw: TODO check visibility
         const {width,height,x,y} = this.getRect();
         ctx.strokeRect(x,y,width,height);
-        //post draw
-        //this.drawContainedFigures(ctx);
     }
 
     toJSON(){
@@ -425,8 +441,9 @@ class RectFigure extends CompositeFigure{
         return rectFigureJson;
     }
 
-    getHandles(){
-        return [];
+    getHandles(drawingView){
+        const resizeHandles = createAllResizeHandles(this, drawingView);
+        return [...resizeHandles];
     }
 
     /**
@@ -455,6 +472,22 @@ class RectFigure extends CompositeFigure{
         })
         return rectFigure;
     }
+}
+
+// I need some mechanism to match strings to a class
+// ward mentioning: Version of classes for upgrades
+// plugins.fed.wiki → 
+
+const figureClasses = new Map();
+figureClasses.set("rectFigure", RectFigure);
+
+const createFigureFromJSON = function(FigureJson,stringClassMapping){
+    const type = FigureJson.type;
+
+    //read class identification
+    const FigureClass = figureClasses.get(type);
+    const figure = new FigureClass(FigureJson);
+    return figure;
 }
 
 export {Figure, CompositeFigure, RectFigure, NoOpFigure}
