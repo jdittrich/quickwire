@@ -119,20 +119,23 @@ class ResizeHandle extends Handle{
     constructor(figure,drawingView){
         super(figure,drawingView);
     }
+    createChangedRect(){
+        throw new SubclassShouldImplementError("createChangedRect", "ResizeHandle");
+    }
     onDragstart(dragEvent){
         dragEvent.drawingView.startPreviewOf(this.getFigure()); 
     }
     onDrag(dragEvent){
         const dragMovement = dragEvent.getDocumentDragMovement();
         const previewFigure = dragEvent.drawingView.getPreviewedFigure();
-        const newRect = this.#createChangedRect(dragMovement)
+        const newRect = this.createChangedRect(dragMovement)
         previewFigure.setRect(newRect);
     }
     onDragend(dragEvent){
         dragEvent.drawingView.endPreview();
 
         const dragMovement = dragEvent.getDocumentDragMovement();
-        const newRect = this.#createChangedRect(dragMovement);
+        const newRect = this.createChangedRect(dragMovement);
 
         //create command
         const resizeCommand = new ChangeFigureRectCommand({
@@ -144,18 +147,17 @@ class ResizeHandle extends Handle{
     }
 }
 
-class ResizeTopRightHandles extends ResizeHandle{
+class ResizeTopRightHandle extends ResizeHandle{
     constructor(figure,drawingView){
         super(figure,drawingView);
     }
     getLocation(){
         const figure = this.getFigure();
         const rect = figure.getRect();
-        const {topRight} = rect.getCorners();
-        const location = topRight;
+        const {topRight:location} = rect.getCorners();
         return location
     }
-    #createChangedRect(dragDocumentMovement){
+    createChangedRect(dragDocumentMovement){
         const figure = this.getFigure();
         const rect = figure.getRect();
         const {bottomLeft,topRight} = rect.getCorners();
@@ -164,22 +166,18 @@ class ResizeTopRightHandles extends ResizeHandle{
         return changedRect;
     }
 }
-class ResizeBottomRightHandle extends Handle{
+
+class ResizeBottomRightHandle extends ResizeHandle{
     constructor(figure,drawingView){
         super(figure,drawingView);
     }
-    
     getLocation(){
         const figure = this.getFigure();
         const rect = figure.getRect();
-        const {topLeft} = rect.getCorners();
-        const location = topLeft;
+        const {bottomRight:location} = rect.getCorners();
         return location;
     }
-    onDragstart(dragEvent){
-        dragEvent.drawingView.startPreviewOf(this.getFigure()); 
-    }
-    #createChangedRect(dragDocumentMovement){
+    createChangedRect(dragDocumentMovement){
         const figure = this.getFigure();
         const rect = figure.getRect();
         const {bottomRight,topLeft} = rect.getCorners();
@@ -187,37 +185,55 @@ class ResizeBottomRightHandle extends Handle{
         const changedRect = Rect.createFromCornerPoints(topLeft,changedBottomRight); 
         return changedRect;
     }
+}
 
-    /**
-     * 
-     * @param {LocalDragEvent} dragEvent 
-     */
-    onDrag(dragEvent){
-        const dragMovement = dragEvent.getDocumentDragMovement();
-        const previewFigure = dragEvent.drawingView.getPreviewedFigure();
-        const newRect = this.#createChangedRect(dragMovement)
-        previewFigure.setRect(newRect);
+class ResizeBottomLeftHandle extends ResizeHandle{
+    constructor(figure,drawingView){
+        super(figure,drawingView);
     }
-    onDragend(dragEvent){
-        dragEvent.drawingView.endPreview();
+    getLocation(){
+        const figure = this.getFigure();
+        const rect = figure.getRect();
+        const {bottomLeft:location} = rect.getCorners();
+        return location;
+    }
+    createChangedRect(dragDocumentMovement){
+        const figure = this.getFigure();
+        const rect = figure.getRect();
+        const {topRight,bottomLeft} = rect.getCorners();
+        const changedBottomLeft = bottomLeft.add(dragDocumentMovement);
+        const changedRect = Rect.createFromCornerPoints(topRight,changedBottomLeft); 
+        return changedRect;
+    }
+}
 
-        const dragMovement = dragEvent.getDocumentDragMovement();
-        const newRect = this.#createChangedRect(dragMovement);
-
-        //create command
-        const resizeCommand = new ChangeFigureRectCommand({
-            "figure":this.getFigure(),
-            "changedRect": newRect
-        },dragEvent.getDrawingView());
-
-        dragEvent.getDrawingView().do(resizeCommand);
+class ResizeTopLeftHandle extends ResizeHandle{
+    constructor(figure,drawingView){
+        super(figure,drawingView);
+    }
+    getLocation(){
+        const figure = this.getFigure();
+        const rect = figure.getRect();
+        const {topLeft:location} = rect.getCorners();
+        return location;
+    }
+    createChangedRect(dragDocumentMovement){
+        const figure = this.getFigure();
+        const rect = figure.getRect();
+        const {topLeft,bottomRight} = rect.getCorners();
+        const changedTopLeft = topLeft.add(dragDocumentMovement);
+        const changedRect = Rect.createFromCornerPoints(bottomRight,changedTopLeft); 
+        return changedRect;
     }
 }
 
 //to try…
 function createAllResizeHandles(figure,drawingView){
-    const swHandle = new ResizeBottomRightHandle(figure,drawingView);
-    return [swHandle];
+    const trHandle = new ResizeTopRightHandle(figure,drawingView);
+    const brHandle = new ResizeBottomRightHandle(figure,drawingView);
+    const blHandle = new ResizeBottomLeftHandle(figure,drawingView);
+    const tlHandle = new ResizeTopLeftHandle(figure,drawingView);
+    return [brHandle,trHandle,blHandle,tlHandle];
 }
 
 export {createAllResizeHandles}
