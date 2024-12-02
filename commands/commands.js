@@ -33,7 +33,7 @@ class CreateFigureCommand extends Command{
     #newFigure
     #newFigureRect
     #appendFigures
-    #toContainer 
+    #toContainer
 
     constructor(params,drawingView){
         super()
@@ -47,8 +47,8 @@ class CreateFigureCommand extends Command{
         const newFigure = newFigurePrototype.copy();
         this.#newFigureRect = newFigureRect;
         this.#newFigure = newFigure;
-        this.#appendFigures= rectEnclosesFigures;
         this.#toContainer = rectEnclosedByFigure;
+        this.#appendFigures= rectEnclosesFigures;
     }
     do(){
         console.log("appending figures:", this.#appendFigures);
@@ -85,22 +85,22 @@ class MoveFigureCommand{
     /**
      * WIP
      * This is a facade to ChangeFigureRectCommand which can be called with new
-     * @param {Object} moveFigureParams
-     * @param {Point} moveFigureParams.moveBy 
-     * @param {Figure} moveFigureParams.figure 
+     * @param {Object} moveFigureParam
+     * @param {Point} moveFigureParam.moveBy 
+     * @param {Figure} moveFigureParam.figure 
      * @returns {ChangeFigureRectCommand}
      */
-    constructor(moveFigureParams, drawingView){
-        const {figure,moveBy} = moveFigureParams;
+    constructor(moveFigureParam, drawingView){
+        const {figure,moveBy} = moveFigureParam;
         const oldRect = figure.getRect();
         const changedRect = oldRect.movedCopy(moveBy);
 
-        const changeRectParams = {
+        const changeRectParam = {
             "changedRect":changedRect,
             "figure":figure
         }
         
-        const changeFigureRectCommand = new ChangeFigureRectCommand(changeRectParams,drawingView);
+        const changeFigureRectCommand = new ChangeFigureRectCommand(changeRectParam,drawingView);
         return changeFigureRectCommand;
     }
 }
@@ -116,13 +116,13 @@ class ChangeFigureRectCommand extends Command{
     #appendFigures
     #figuresNotContainedAnymore
     /**
-     * @param {Object} params
-     * @param {Figure} params.figure
-     * @param {Rect}   params.changedRect
+     * @param {Object} param
+     * @param {Figure} param.figure
+     * @param {Rect}   param.changedRect
      */
-    constructor(params, drawingView){
+    constructor(param, drawingView){
         super();
-        const {figure,changedRect} = params;
+        const {figure,changedRect} = param;
         
         if(!figure||!changedRect || !drawingView){
             throw Error(`tried to create new ChangeFigureRectCommand, but at least one parameter was not defined`);
@@ -234,4 +234,4 @@ class CommandStack extends EventTarget{
     }
 }
 
-export {CommandStack, MoveFigureCommand, ResizeFigureCommand, CreateFigureCommand, ChangeFigureRectCommand}
+export {CommandStack, CreateFigureCommand,MoveFigureCommand, ChangeFigureRectCommand}
