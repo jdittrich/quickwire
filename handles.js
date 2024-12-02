@@ -11,7 +11,7 @@
 
 import { SubclassShouldImplementError } from "./errors.js";
 import { Rect, Point } from "./geom.js";
-import { ResizeFigureCommand, ChangeFigureRectCommand } from "./commands/commands.js";
+import { ChangeFigureRectCommand } from "./commands/commands.js";
 
 //for types
 import { LocalDragEvent } from "./events.js";
