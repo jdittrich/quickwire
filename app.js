@@ -1,12 +1,14 @@
 import { Drawing } from "./drawing.js"
 import { DrawingView } from "./drawingView.js"
 import { Point } from "./geom.js"
-import { RectFigure } from "./figures.js"
+import { RectFigure, ButtonFigure } from "./figures.js"
 import { LocalMouseEvent } from "./events.js"
 //import { SelectionTool, NoOpTool, CreateElementTool } from "./tools.js"
 import { SelectionTool } from "./tools/selectionTool.js";
 import { NoOpTool } from "./tools/noopTool.js";
 import { CreateFigureTool } from "./tools/createFigureTool.js";
+import {NameFigureClassMapper} from "./NameFigureClassMapper.js";
+import {nameFigureClassMap} from "./nameFigureClassMap.js"
 
 class App{
     #canvas
@@ -32,17 +34,24 @@ class App{
         this.#canvas.addEventListener("keyup", this.#keyup.bind(this));
         
         this.#domContainer.append(this.#canvas);
-
         
+        //setup figureName to Class mapping
+        
+        const nameFigureClassMapper = new NameFigureClassMapper();
+        nameFigureClassMapper.registerFromObject(nameFigureClassMap);
+
         //setup drawing view
         this.#drawing = new Drawing();
         this.#drawingView = new DrawingView(
-            this.#canvas.getContext("2d"),
-            this.#drawing,
-            new Point({
-                x:this.#canvas.width,
-                y:this.#canvas.height
-            })
+            {
+                "ctx":this.#canvas.getContext("2d"),
+                "ctxSize": new Point({
+                    x:this.#canvas.width,
+                    y:this.#canvas.height
+                }),
+                "drawing":this.#drawing,
+                "nameFigureClassMapper":nameFigureClassMapper
+            }
         );
 
         this.#drawingView.changeTool(new SelectionTool())
@@ -52,9 +61,12 @@ class App{
         this.toolbar.addTool("selection", new SelectionTool());
         this.toolbar.addTool("noop", new NoOpTool());
         const rectFigureTemplate = new RectFigure({"x":0,"y":0,"width":10,"height":10});
-        this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate)); 
+        this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate));
+        const buttonFigureTemplate = new ButtonFigure({"x":0,"y":0,"width":10,"height":10,"label":"OK"}) 
+        this.toolbar.addTool("new Button", new CreateFigureTool(buttonFigureTemplate));
         this.toolbar.addAction("undo",function(drawingView){drawingView.undo()});
         this.toolbar.addAction("redo",function(drawingView){drawingView.redo()});
+        
         //for debugging
         window.drawingView = this.#drawingView;
         window.drawing = this.#drawing;

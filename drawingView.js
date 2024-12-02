@@ -2,7 +2,7 @@ import {ViewTransform} from './transform.js'
 import { NoOpTool } from './tools/noopTool.js'
 import {LocalMouseEvent, LocalDragEvent } from './events.js'
 import {NoOpFigure} from './figures.js'
-import { CommandStack, CreateFigureCommand } from './commands/commands.js'
+import { CommandStack } from './commands/commands.js'
 import {Selection} from './selection.js';
 
 //used as types
@@ -38,12 +38,23 @@ class DrawingView{
      * @param {Drawing} drawing 
      * @param {Point} size
      */
-    constructor(ctx,drawing,size){
+
+    /**
+     * 
+     * @param {Object} param
+     * @param {RenderingContext2D}    param.ctx
+     * @param {Drawing}               param.drawing
+     * @param {point}                 param.ctxSize 
+     * @param {NameFigureClassMapper} param.nameFigureClassMapper
+     */
+    constructor(param){
+        const {ctx,drawing,ctxSize,nameFigureClassMapper} = param
+
         this.#transform = new ViewTransform();
         
 
         //drawing
-        this.setCtxSize(size);//needed to know which area to clear on redraws
+        this.setCtxSize(ctxSize);//needed to know which area to clear on redraws
         this.#ctx = ctx;
         this.drawing = drawing;
         
@@ -74,7 +85,6 @@ class DrawingView{
     }
     #drawHandles(){
         if(this.#dragging){return}
-        //if(!this.#selection.hasSelection()){return}
         const handles = this.getHandles(this);
         handles.forEach(handle=> handle.draw(this.#ctx));
     }
@@ -85,7 +95,7 @@ class DrawingView{
 
     #drawPreviews(){ 
         // that probably can be sped up by entering a preview mode, triggered by the tool
-        // saving the canvas state and just redrawing whats new that
+        // saving the canvas state and just redrawing whats new
         this.#ctx.setTransform(...this.#transform.toArray());
         this.#previewElement.draw(this.#ctx);
         this.#ctx.resetTransform();
@@ -106,7 +116,7 @@ class DrawingView{
      */
     startPreviewOf(figureToPreview){ //puts figure in preview
         this.#previewedElement = figureToPreview;
-        this.#previewElement = figureToPreview.copy();
+        this.#previewElement = figureToPreview.copy(); //like: copy(this.stringClassMapper)
         figureToPreview.setIsVisible(false);
     }
 
@@ -330,6 +340,14 @@ class DrawingView{
     removeFigure(figure){
        figure.remove();
     }
+
+
+    // createFigureFromJson(figureJson){
+    //     const figureClassName = figureJson.type; 
+    //     const FigureClass = this.#figureNameClassMapper(figureClassName);
+    //     const figure = new FigureClass(figureJson);
+    //     return figure; 
+    // }
 
     /**
      * execute a new command and put it on stack for undoable actions
