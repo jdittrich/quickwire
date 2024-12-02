@@ -2,6 +2,10 @@ import {Rect, Point} from './geom.js';
 import { SubclassShouldImplementError } from './errors.js';
 import { createAllResizeHandles } from './handles.js';
 
+// as for now (2024-11-29) you can inherit from Figure BUT it leads to other code or autogrouping getting hickups. 
+// so I might add some sort of flag or duck type to determine if a figure can be used as container. 
+// maybe the GoF book has some hints at the composite pattern. 
+// 
 class Figure extends EventTarget{
     constructor(){
         super();
@@ -402,6 +406,20 @@ class CompositeFigure extends Figure{
         const jsonOfContainedFigures = this.#containedFigures.map(figure=>figure.toJSON());
         return jsonOfContainedFigures;
     }
+
+    /**
+     * Helper
+     * @param {Array} containedFiguresJson 
+     * @returns {Figure[]} 
+     */
+    createContainedFiguresFromJson(figureJson,figureStringClassMapper){
+        figureJson.containedFigures.map((containedFigureJson)=>{
+            const type = containedFigureJson.type;
+            const requiredFigureClass = figureStringClassMapper(type) //figureJson.type goes in…
+            const figure = new requiredFigureClass(containedFigureJson);
+            return figure;
+        })
+    }
 }
 
 class RectFigure extends CompositeFigure{
@@ -431,7 +449,7 @@ class RectFigure extends CompositeFigure{
     toJSON(){
         const {x,y,width,height} = this.getRect()
         const rectFigureJson =  {
-            "figureType":this.constructor.name,
+            "type":"RectFigure",
             "x":x,
             "y":y,
             "width":width,
@@ -454,40 +472,114 @@ class RectFigure extends CompositeFigure{
         const {x,y,width,height} = this.getRect();
         const containedFigures = this.getContainedFigures();
         const type = this.constructor.name;
-        const rectFigureString = `x:${x}, y:${y}, width:${width}, height:${height}, number of contained figures:${containedFigures.lenght},type:${type}`;
+        const rectFigureString = `x:${x}, y:${y}, width:${width}, height:${height}, number of contained figures:${containedFigures.length},type:${type}`;
         return rectFigureString;
     }
     /**
      * created a figure from a JSON
      * @param {JSON} JSON 
      */
-    static fromJSON(JSON){
+    static fromJSON(JSON,figureStringClassMapper){
         const {x,y,width,height,containedFigures} = JSON;
+        const containedFigureObjects = this.createContainedFiguresFromJson(containedFigures,figureStringClassMapper)
         const rectFigure = new RectFigure({
             "x":                x,
             "y":                y,
             "width":            width,
             "height":           height,
             "containedFigures": containedFigures
-        })
+        });
         return rectFigure;
     }
 }
 
-// I need some mechanism to match strings to a class
-// ward mentioning: Version of classes for upgrades
-// plugins.fed.wiki → 
+class ButtonFigure extends CompositeFigure{
+    #label
+    constructor(params){
+        super();
+        const {x,y,width,height,label} = params;
+        this.setRect(new Rect({
+            "x":x,
+            "y":y,
+            "width":width,
+            "height":height
+        }));
+        this.#label = label;
+    }
 
-const figureClasses = new Map();
-figureClasses.set("rectFigure", RectFigure);
+    changeLabel(changedLabel){
+        this.#label =changedLabel;
+    }
+    getLabel(){
+        return this.#label;
+    }
 
-const createFigureFromJSON = function(FigureJson,stringClassMapping){
-    const type = FigureJson.type;
+    drawFigure(ctx){
+        const rect = this.getRect();
+        const {width,height,x,y} = rect;
+        const center = rect.getCenter();
+        
+        ctx.strokeRect(x,y,width,height);
 
-    //read class identification
-    const FigureClass = figureClasses.get(type);
-    const figure = new FigureClass(FigureJson);
-    return figure;
+        //use text width and height to place in center
+        const metrics = ctx.measureText(this.#label);
+        const labelY = center.y + ((metrics.hangingBaseline-metrics.ideographicBaseline)/2);
+        const labelX = center.x - (metrics.width/2);
+        //…but for now just slap text in upper left corner.
+        ctx.fillText(this.#label, labelX, labelY);
+    }
+
+    toJSON(){
+        const {x,y,width,height} = this.getRect();
+        const label = this.#label;
+        const buttonFigureJson =  {
+            "type":this.constructor.name,
+            "x":x,
+            "y":y,
+            "width":width,
+            "height":height,
+            "label":label,
+            "containedFigures":this.getJsonOfContainedFigures()
+        }
+        return buttonFigureJson;
+    }
+
+    getHandles(drawingView){
+        const resizeHandles = createAllResizeHandles(this, drawingView);
+        return [...resizeHandles];
+    }
+
+    /**
+     * @see {Figure.toString}
+     * @returns {String}
+     */
+    toString(){
+        const {x,y,width,height} = this.getRect();
+        const containedFigures = this.getContainedFigures();
+        const label = this.#label;
+        const type = this.constructor.name;
+        const buttonFigureString = `x:${x}, y:${y}, width:${width}, height:${height}, label:${label},number of contained figures:${containedFigures.length},type:${type}`;
+        return buttonFigureString;
+    }
+    /**
+     * created a figure from a JSON
+     * @param {JSON} JSON 
+     * @param {function} figureStringClassMapper gets a string, returns the class 
+     */
+    static fromJSON(JSON,figureStringClassMapper){
+        const {x,y,width,height,label,containedFigures} = JSON;
+        const buttonFigure = new ButtonFigure({
+            "x":                x,
+            "y":                y,
+            "width":            width,
+            "height":           height,
+            "label":            label,
+            "containedFigures": containedFigures
+        })
+        return buttonFigure;
+    }
 }
 
-export {Figure, CompositeFigure, RectFigure, NoOpFigure}
+
+
+export {Figure, CompositeFigure, RectFigure, ButtonFigure, NoOpFigure}
