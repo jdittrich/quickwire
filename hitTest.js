@@ -40,7 +40,7 @@ function figureWalkTreeLazy(rootFigure,predicateParameter,figurePredicate){
 /**
  * @param {DocumentView} the main view
  * @param {Point} a point in document coordinates
- * @params {Boolean} includeRoot
+ * @param {Boolean} includeRoot
  * @returns {array} of figures under the point (or an empty array) starting with innermost matches
  * 
  */

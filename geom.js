@@ -8,17 +8,17 @@ class Point{
     /**
      * Points can be used positions or vectors
      * 
-     * @param {object} createPointParams
-     * @param {number} createPointParams.y
-     * @param {number} createPointParams.x 
+     * @param {object} createPointParam
+     * @param {number} createPointParam.y
+     * @param {number} createPointParam.x 
      */
-    constructor(createPointParams){
-        const {x,y} = createPointParams;
+    constructor(createPointParam){
+        const {x,y} = createPointParam;
         if(Number.isNaN(x) || Number.isNaN(y)){ //test NaN, since 0 casts to false. 
             throw new Error(`Points need to be created by passing an object with the properties 'x' (was:${x} ) and 'top' (was: ${y} ) of type number`)
         }
-        this.y = createPointParams.y; 
-        this.x = createPointParams.x;
+        this.y = createPointParam.y; 
+        this.x = createPointParam.x;
     }
 
     /**
@@ -93,21 +93,21 @@ class Point{
 class Rect{
     /**
      * A rectangle, positioned on a coordinate system
-     * @param {object} createRectParams
-     * @param {number} createRectParams.width
-     * @param {number} createRectParams.height
-     * @param {number} createRectParams.y
-     * @param {number} createRectParams.x 
+     * @param {object} createRectParam
+     * @param {number} createRectParam.width
+     * @param {number} createRectParam.height
+     * @param {number} createRectParam.y
+     * @param {number} createRectParam.x 
      */
-    constructor(createRectParams){
-        const {x,y,width,height} = createRectParams;
+    constructor(createRectParam){
+        const {x,y,width,height} = createRectParam;
         if(isNaN(x)||isNaN(y)||isNaN(width)||isNaN(height)){
             throw new Error(`Rects need to be created by passing an object with x (was:${x} ),y (was: ${y} ),\n width (was: ${width} ), height (was ${height} ) of type number`)
         }
-        this.width = createRectParams.width;
-        this.height = createRectParams.height;
-        this.y = createRectParams.y;
-        this.x = createRectParams.x;
+        this.width = createRectParam.width;
+        this.height = createRectParam.height;
+        this.y = createRectParam.y;
+        this.x = createRectParam.x;
     }
 
     /**

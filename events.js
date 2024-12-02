@@ -17,18 +17,18 @@ class LocalMouseEvent{
     #previousPosition
 
     /**
-     * @param {Object}      params
-     * @param {Point}       params.screenPosition - where the event on the view happened in screen coordinates (in contrast to document coordinates)
-     * @param {Point}       params.previousPosition
-     * @param {DrawingView} params.view - needs access to point transformation methods of view.
+     * @param {Object}      param
+     * @param {Point}       param.screenPosition - where the event on the view happened in screen coordinates (in contrast to document coordinates)
+     * @param {Point}       param.previousPosition
+     * @param {DrawingView} param.view - needs access to point transformation methods of view.
      */
-    constructor(params){
-        if(!params.screenPosition || !params.previousPosition || !params.view){
+    constructor(param){
+        if(!param.screenPosition || !param.previousPosition || !param.view){
             throw new Error("At least one needed parameter is not defined");
         }
-        this.#screenPosition = params.screenPosition
-        this.#previousPosition = params.previousPosition
-        this.drawingView = params.view; 
+        this.#screenPosition = param.screenPosition
+        this.#previousPosition = param.previousPosition
+        this.drawingView = param.view; 
     }
 
     /**
@@ -95,18 +95,18 @@ class LocalDragEvent extends LocalMouseEvent{
     #downPoint = null;
 
     /**
-     * @param {Object}      params
-     * @param {Point}       params.screenPosition - where the event on the view happened in screen coordinates (in contrast to document coordinates)
-     * @param {Point}       params.previousPosition
-     * @param {DrawingView} params.view - needs access to point transformation methods of view.
-     * @param {Point}       params.downPoint
+     * @param {Object}      param
+     * @param {Point}       param.screenPosition - where the event on the view happened in screen coordinates (in contrast to document coordinates)
+     * @param {Point}       param.previousPosition
+     * @param {DrawingView} param.view - needs access to point transformation methods of view.
+     * @param {Point}       param.downPoint
      */
-    constructor(params){
-        super(params);
-        if(!params.downPoint){
+    constructor(param){
+        super(param);
+        if(!param.downPoint){
             throw new Error("downPoint not passed");
         }
-        this.#downPoint = params.downPoint;
+        this.#downPoint = param.downPoint;
     }
     getMousedownScreenPosition(){
        return this.#downPoint;
