@@ -2,13 +2,16 @@ import {Rect, Point} from './geom.js';
 import { SubclassShouldImplementError } from './errors.js';
 import { createAllResizeHandles } from './handles.js';
 
-// as for now (2024-11-29) you can inherit from Figure BUT it leads to other code or autogrouping getting hickups. 
-// so I might add some sort of flag or duck type to determine if a figure can be used as container. 
-// maybe the GoF book has some hints at the composite pattern. 
-// 
 class Figure extends EventTarget{
-    constructor(){
+    constructor(param){
         super();
+        const {x,y,width,height} = param;
+        this.setRect(new Rect({
+            "x":x,
+            "y":y,
+            "width":width,
+            "height":height
+        }));
     }
     
     /** Method called from other object. Interface to all needed drawing operations */
@@ -88,7 +91,7 @@ class Figure extends EventTarget{
     getHandles(drawingView){
         /**
          * NOTE on Architecture: 
-         * Why do we need to pass drawing view here?
+         * Why do we need to pass drawingView here?
          * figures do not need to know drawingView (so far)
          * thery just need to know how to draw themselves and where they
          * are in document coordinates. 
@@ -213,7 +216,6 @@ class Figure extends EventTarget{
     //#region: copy
 
     /**
-     * Should return a copy of the figure with all its subfigures? Or maybe I implement , deep = false or copyDeep /copyShallow
      * @returns {Figure}
      */
     copy(){
@@ -223,6 +225,13 @@ class Figure extends EventTarget{
 
     //#region serialization/deserialization
     /**
+     * string serialization read by people, similar to python’s __str__
+     */
+    toString(){
+        throw new SubclassShouldImplementError("toString","Figure");
+    }
+
+    /**
      * JSON serialization for storage
      * @returns {JSON}
      */
@@ -230,24 +239,41 @@ class Figure extends EventTarget{
         throw new SubclassShouldImplementError("toJSON","Figure");
     }
 
-    /**
-     * string serialization read by people, similar to python’s __str__
-     */
-    toString(){
-        throw new SubclassShouldImplementError("toString","Figure");
+    // WIP: returns the data for the figure’s rect
+    // can be called by subclasses to encapsulate data
+    // that all figues have
+    getJsonOfRect(){
+        const {x,y,width,height} = this.getRect();
+        return {
+            "x":x,
+            "y":y,
+            "width":width,
+            "height":height
+        }
     }
+
+    //Not defined here: Every class should have a fromJSON(figureJSON), the opposite to .toJSON
 }
 
 /**If you need something that is technically a figure, but does nothing */
 class NoOpFigure extends Figure{
+    constructor(){
+        super({ //figure needs some data, so we make some.
+            x:0,
+            y:0,
+            width:10,
+            height:10
+        });
+    }
     draw(ctx){
         return;
     }
 }
 
 class CompositeFigure extends Figure{
-    constructor(){
-        super();
+    constructor(param){
+        super(param);
+        this.appendFigures(param.containedFigures||[]);
     }
     draw(ctx){
         if(this.getIsVisible()){
@@ -397,6 +423,14 @@ class CompositeFigure extends Figure{
         const containedFigures = this.getContainedFigures();
         containedFigures.forEach(figure=>figure.movePositionBy(moveBy));
     }
+    /**
+     * @param {NameFigureClassMapper} nameFigureClassMapper 
+     */
+    copy(nameFigureClassMapper){
+        const figureJSON = this.toJSON();
+        const newFigure = this.constructor.fromJSON(figureJSON,nameFigureClassMapper);
+        return newFigure;
+    }
 
     /**
      * Helper
@@ -404,7 +438,9 @@ class CompositeFigure extends Figure{
      */
     getJsonOfContainedFigures(){
         const jsonOfContainedFigures = this.#containedFigures.map(figure=>figure.toJSON());
-        return jsonOfContainedFigures;
+        return {
+            "containedFigures": jsonOfContainedFigures
+        }
     }
 
     /**
@@ -412,106 +448,94 @@ class CompositeFigure extends Figure{
      * @param {Array} containedFiguresJson 
      * @returns {Figure[]} 
      */
-    createContainedFiguresFromJson(figureJson,figureStringClassMapper){
-        figureJson.containedFigures.map((containedFigureJson)=>{
+    static createContainedFiguresFromJson(figureJson,nameFigureClassMapper){
+        if(!figureJson.containedFigures){return}
+        if(Array.isArray(figureJson)){
+            throw new TypeError("figureJson is an Array. If you just passed the containedFigures property, please pass the full figure object instead")
+        }
+
+        const containedFiguresInstances = figureJson.containedFigures.map((containedFigureJson)=>{
             const type = containedFigureJson.type;
-            const requiredFigureClass = figureStringClassMapper(type) //figureJson.type goes in…
-            const figure = new requiredFigureClass(containedFigureJson);
+            const RequiredFigureClass = nameFigureClassMapper.getClass(type) //figureJson.type goes in…
+            const figure = RequiredFigureClass.fromJSON(containedFigureJson);
             return figure;
         })
+        return containedFiguresInstances;
     }
 }
 
 class RectFigure extends CompositeFigure{
-    constructor(params){
-        super();
-        const {x,y,width,height} = params;
-        this.setRect(new Rect({
-            "x":x,
-            "y":y,
-            "width":width,
-            "height":height
-        }));
+    figureType = "RectFigure";
 
-        // TODO: needs a map that returns the "real" objects based on JSON
-        // but how do I generate objects of an unknown class?
-        // CODE draft:
-        // const containedFigures = params.containedFigures.map(…
-        // I assume I need some repository matching strings with classes
-        // so I can retrieve them
-        // 
+    constructor(params){
+        super(params);
     }
+
     drawFigure(ctx){
         const {width,height,x,y} = this.getRect();
         ctx.strokeRect(x,y,width,height);
-    }
-
-    toJSON(){
-        const {x,y,width,height} = this.getRect()
-        const rectFigureJson =  {
-            "type":"RectFigure",
-            "x":x,
-            "y":y,
-            "width":width,
-            "height":height,
-            "containedFigures":this.getJsonOfContainedFigures()
-        }
-        return rectFigureJson;
     }
 
     getHandles(drawingView){
         const resizeHandles = createAllResizeHandles(this, drawingView);
         return [...resizeHandles];
     }
-
-    /**
-     * @see {Figure.toString}
-     * @returns {String}
-     */
+    
+   /**
+    * @see {Figure.toString}
+    * @returns {String}
+    */
     toString(){
-        const {x,y,width,height} = this.getRect();
-        const containedFigures = this.getContainedFigures();
-        const type = this.constructor.name;
-        const rectFigureString = `x:${x}, y:${y}, width:${width}, height:${height}, number of contained figures:${containedFigures.length},type:${type}`;
-        return rectFigureString;
+       const {x,y,width,height} = this.getRect();
+       const containedFigures = this.getContainedFigures();
+       const type = this.constructor.name;
+       const rectFigureString = `x:${x}, y:${y}, width:${width}, height:${height}, number of contained figures:${containedFigures.length},type:${type}`;
+       return rectFigureString;
     }
+    
+    toJSON(){
+        const rectJson = this.getJsonOfRect()
+        const containedFiguresJson = this.getJsonOfContainedFigures();
+        const rectFigureJson =  {
+            "type":this.figureType,
+            ...rectJson,
+            ...containedFiguresJson
+        }
+        return rectFigureJson;
+    }
+
     /**
      * created a figure from a JSON
      * @param {JSON} JSON 
      */
-    static fromJSON(JSON,figureStringClassMapper){
-        const {x,y,width,height,containedFigures} = JSON;
-        const containedFigureObjects = this.createContainedFiguresFromJson(containedFigures,figureStringClassMapper)
+    static fromJSON(JSON,nameFigureClassMapper){
+        const {x,y,width,height} = JSON;
+        const containedFigureObjects = super.createContainedFiguresFromJson(JSON,nameFigureClassMapper);
         const rectFigure = new RectFigure({
             "x":                x,
             "y":                y,
             "width":            width,
             "height":           height,
-            "containedFigures": containedFigures
-        });
-        return rectFigure;
+            "containedFigures": containedFigureObjects
+         });
+         return rectFigure;
     }
 }
 
 class ButtonFigure extends CompositeFigure{
-    #label
-    constructor(params){
-        super();
-        const {x,y,width,height,label} = params;
-        this.setRect(new Rect({
-            "x":x,
-            "y":y,
-            "width":width,
-            "height":height
-        }));
-        this.#label = label;
+    figureType = "ButtonFigure";
+    #buttonLabel = null;
+
+    constructor(param){
+        super(param);
+        this.#buttonLabel = param.label;
     }
 
     changeLabel(changedLabel){
-        this.#label =changedLabel;
+        this.#buttonLabel =changedLabel;
     }
     getLabel(){
-        return this.#label;
+        return this.#buttonLabel;
     }
 
     drawFigure(ctx){
@@ -521,65 +545,68 @@ class ButtonFigure extends CompositeFigure{
         
         ctx.strokeRect(x,y,width,height);
 
-        //use text width and height to place in center
-        const metrics = ctx.measureText(this.#label);
+        //place label in center, use text width and height to find place of center
+        const metrics = ctx.measureText(this.#buttonLabel);
         const labelY = center.y + ((metrics.hangingBaseline-metrics.ideographicBaseline)/2);
         const labelX = center.x - (metrics.width/2);
-        //…but for now just slap text in upper left corner.
-        ctx.fillText(this.#label, labelX, labelY);
+        ctx.fillText(this.#buttonLabel, labelX, labelY);
     }
 
-    toJSON(){
-        const {x,y,width,height} = this.getRect();
-        const label = this.#label;
-        const buttonFigureJson =  {
-            "type":this.constructor.name,
-            "x":x,
-            "y":y,
-            "width":width,
-            "height":height,
-            "label":label,
-            "containedFigures":this.getJsonOfContainedFigures()
-        }
-        return buttonFigureJson;
-    }
-
+    
     getHandles(drawingView){
         const resizeHandles = createAllResizeHandles(this, drawingView);
         return [...resizeHandles];
     }
-
+    
     /**
      * @see {Figure.toString}
      * @returns {String}
-     */
-    toString(){
+    */
+   toString(){
         const {x,y,width,height} = this.getRect();
         const containedFigures = this.getContainedFigures();
-        const label = this.#label;
+        const label = this.#buttonLabel;
         const type = this.constructor.name;
         const buttonFigureString = `x:${x}, y:${y}, width:${width}, height:${height}, label:${label},number of contained figures:${containedFigures.length},type:${type}`;
         return buttonFigureString;
     }
+
     /**
-     * created a figure from a JSON
-     * @param {JSON} JSON 
-     * @param {function} figureStringClassMapper gets a string, returns the class 
+     * Serializes figure to JSON
+     * @returns {JSON}
      */
-    static fromJSON(JSON,figureStringClassMapper){
-        const {x,y,width,height,label,containedFigures} = JSON;
-        const buttonFigure = new ButtonFigure({
+    toJSON(){
+        const rectJson = this.getJsonOfRect();
+        const containedFigureJson = this.getJsonOfContainedFigures();
+
+        const buttonFigureJson =  {
+            "type":this.figureType,
+            "label": this.#buttonLabel,
+            ...containedFigureJson,
+            ...rectJson
+        }
+        return buttonFigureJson;
+    }
+
+    /**
+    * created a figure from a JSON
+    * @param {JSON} JSON 
+    * @param {function} nameFigureClassMapper gets a string, returns the class 
+    */
+   static fromJSON(JSON,nameFigureClassMapper){
+       const {x,y,width,height,label} = JSON;
+       const containedFigureObjects = super.createContainedFiguresFromJson(JSON,nameFigureClassMapper);
+       const buttonFigure = new ButtonFigure({
             "x":                x,
             "y":                y,
             "width":            width,
             "height":           height,
             "label":            label,
-            "containedFigures": containedFigures
-        })
+            "containedFigures": containedFigureObjects
+        });
         return buttonFigure;
     }
 }
-
 
 
 export {Figure, CompositeFigure, RectFigure, ButtonFigure, NoOpFigure}
