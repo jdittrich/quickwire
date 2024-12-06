@@ -5,10 +5,6 @@ import {NoOpFigure} from './figures.js'
 import { CommandStack } from './commands/commands.js'
 import {Selection} from './selection.js';
 
-//used as types
-import { Drawing } from './drawing.js'
-import {Point} from './geom.js'
-
 /**
  * Does: 
  * – manage repainting
@@ -31,6 +27,7 @@ class DrawingView{
     #ctxSize      = null;
     #commandStack = null;
     #selection    = null; 
+    #nameFigureClassMapper = null; 
 
     /**
      * 
@@ -49,20 +46,20 @@ class DrawingView{
      */
     constructor(param){
         const {ctx,drawing,ctxSize,nameFigureClassMapper} = param
-
-        this.#transform = new ViewTransform();
         
-
         //drawing
+        this.#transform = new ViewTransform();
         this.setCtxSize(ctxSize);//needed to know which area to clear on redraws
         this.#ctx = ctx;
         this.drawing = drawing;
         
+        this.#nameFigureClassMapper = nameFigureClassMapper;
         this.#commandStack = new CommandStack();
         this.#selection = new Selection();
-        
         this.changeTool(new NoOpTool())
         
+
+        //first draw
         this.#drawAll()
     }
     setCtxSize(ctxSize){
@@ -116,7 +113,7 @@ class DrawingView{
      */
     startPreviewOf(figureToPreview){ //puts figure in preview
         this.#previewedElement = figureToPreview;
-        this.#previewElement = figureToPreview.copy(); //like: copy(this.stringClassMapper)
+        this.#previewElement = figureToPreview.copy(this.#nameFigureClassMapper); //like: copy(this.stringClassMapper)
         figureToPreview.setIsVisible(false);
     }
 
@@ -135,8 +132,8 @@ class DrawingView{
      * @param {Point} vector 
      */
     panBy(vector){
-        this.#transform.setTranslateBy(vector)
-        this.#drawAll()
+        this.#transform.setTranslateBy(vector);
+        this.#drawAll();
     }
     
     /**
