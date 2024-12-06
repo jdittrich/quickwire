@@ -14,7 +14,7 @@ import { Rect, Point } from "./geom.js";
 import { ChangeFigureRectCommand } from "./commands/commands.js";
 
 //for types
-import { LocalDragEvent } from "./events.js";
+//import { LocalDragEvent } from "./events.js";
 
 class Handle{
     #figure

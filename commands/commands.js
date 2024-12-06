@@ -1,6 +1,5 @@
 
 
-import { DrawingView } from "../drawingView.js";
 import { Rect, Point } from "../geom.js";
 
 /**

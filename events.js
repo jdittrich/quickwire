@@ -1,6 +1,6 @@
 
 // import for types
-import { DrawingView } from "./drawingView.js";
+//import { DrawingView } from "./drawingView.js";
 import { Point } from "./geom.js";
 import {ViewTransform} from "./transform.js";
 

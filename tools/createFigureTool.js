@@ -1,5 +1,4 @@
 import { AbstractTool } from "./abstractTool.js";
-import {LocalDragEvent, LocalMouseEvent} from '../events.js'
 import { CreateFigureCommand } from "../commands/commands.js";
 
 //Adds an element to the drawing
