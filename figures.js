@@ -450,6 +450,9 @@ class CompositeFigure extends Figure{
      */
     static createContainedFiguresFromJson(figureJson,nameFigureClassMapper){
         if(!figureJson.containedFigures){return}
+        if(nameFigureClassMapper === "undefined"){
+            throw new TypeError("nameFigureClassMapper is undefined")
+        }
         if(Array.isArray(figureJson)){
             throw new TypeError("figureJson is an Array. If you just passed the containedFigures property, please pass the full figure object instead")
         }
