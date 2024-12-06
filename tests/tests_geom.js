@@ -19,6 +19,12 @@ export const test_point = QUnit.module('point', function() {
         assert.propEqual(subPoint, {x:5,y:15});
     });
 
+    QUnit.test('getInverse', function(assert) {
+        const testPoint1 = new Point({x:10,y:-20});
+        const inversePoint = testPoint1.inverse();
+        assert.propEqual(inversePoint, {x:-10,y:20});
+    });
+
     QUnit.test('offset From (alias sub)', function(assert) {
         const testPoint1 = new Point({x:10,y:20});
         const testPoint2 = new Point({x:5, y:5});
@@ -61,17 +67,20 @@ export const test_rect = QUnit.module('rect', function() {
         assert.propEqual(testRect.getCenter(), {x:30,y:30});
     });
 
+    QUnit.test('get corners', function(assert) {
+        const testRect = new Rect({x:10,y:20, width:40, height:20})
+        const corners = testRect.getCorners();
+        assert.propEqual(corners.topRight,    {x:50,y:20});
+        assert.propEqual(corners.bottomRight, {x:50,y:40});
+        assert.propEqual(corners.bottomLeft,  {x:10,y:40});
+        assert.propEqual(corners.topLeft,     {x:10,y:20});
+    });
+
     //manipulation
     QUnit.test('can be translated by a distance', function(assert) {
         const testRect = new Rect({x:10,y:20, width:40, height:20})
         const movedRect = testRect.movedCopy(new Point({x:4,y:8}));
         assert.propContains(movedRect, {x:14,y:28});
-    });
-
-    QUnit.test('can be repositioned', function(assert) {
-        const testRect = new Rect({x:10,y:20, width:40, height:20})
-        const repositionedRect = testRect.movedCopy(new Point({x:4,y:8}))
-        assert.propContains(repositionedRect, {x:14,y:28});
     });
 
     // Hit Testing
