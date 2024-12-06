@@ -10,12 +10,29 @@ const rectFigureSerialization = QUnit.module('rectFigureSerialization', function
             type:"RectFigure",
             x: 10,
             y: 20,
-            width: 30,
-            height: 40,
-            containedFigures:[]
+            width: 40,
+            height: 50,
+            containedFigures:[
+                {
+                    type:"RectFigure",
+                    x: 12,
+                    y: 22,
+                    width: 10,
+                    height: 10,
+                    containedFigures:[]
+                },
+                {
+                    type:"RectFigure",
+                    x: 24,
+                    y: 34,
+                    width: 10,
+                    height: 10,
+                    containedFigures:[]
+                }
+            ]
         };
         const FigureClass = nameFigureClassMapper.getClass(rectFigureJSON.type);
-        const rectFigure = FigureClass.fromJSON(rectFigureJSON);
+        const rectFigure = FigureClass.fromJSON(rectFigureJSON,nameFigureClassMapper);
         const generatedJson = rectFigure.toJSON();
         assert.propEqual(rectFigureJSON,generatedJson);
     });
