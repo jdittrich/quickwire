@@ -1,17 +1,17 @@
-import {CompositeFigure} from './figures.js';
 import {Rect} from './geom.js';
+import {CompositeFigure} from './figures.js';
 import {findFiguresBelowPoint, findEnclosingFigures, findEnclosedFigures, findFiguresEnclosingAndEnclosed} from './hitTest.js';
 
 // the drawing contains other figures, so it is basically a composite figure
 class Drawing extends CompositeFigure{
     constructor(){
-        super()
-        this.setRect(new Rect({
-            "x":0,
-            "y":0,
-            "width":600,
-            "height":600
-        }));
+        super({
+            x:0,
+            y:0,
+            width:600,
+            height:600
+        })
+       
     }
     draw(ctx){
         const {width, height} = this.getRect();
