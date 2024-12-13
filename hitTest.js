@@ -35,6 +35,8 @@ function figureWalkTreeLazy(rootFigure,predicateParameter,figurePredicate){
     }
 }
 
+
+
 //ready-to-use functions
 
 /**
@@ -57,6 +59,7 @@ function findFiguresBelowPoint(rootFigure,point, includeRoot){
 }
 
 /**
+ * Find any enclosing Figure, e.g. for a hit test
  * @param {Figure} rootFigure - can be any figure, often the root of the whole document. 
  * @param {Figure} testRect - the figure that is enclosed
  * @returns {array} of figures enclosing the rect, starting with the innermost enclosing rect.
@@ -66,9 +69,26 @@ function findEnclosingFigures(rootFigure,testRect){
         const isFigureEnclosingRect = figure.enclosesRect(testRect);
         return isFigureEnclosingRect;
     });
-
     return enclosingFigures;
 }
+
+/**
+ * 
+ * @param {Figure} rootFigure 
+ * @param {Rect} testRect 
+ */
+// 09.12.24: I considered having non-composite figures, but whenever I place something 
+// in top of a figure, I want it to be composite-ed. 
+// so I keep everything as is. 
+// function findEnclosingCompositeFigures(rootFigure,testRect){
+//     const enclosingCompositeFigures = figureWalkTreeLazy(rootFigure,testRect,(figure,testRect)=>{
+//         const isFigureEnclosingRect = figure.enclosesRect(testRect);
+//         const isCompositeFigure = figure.isComposite;
+//         const enclosedByCompositeFigure = isFigureEnclosingRect && isCompositeFigure;
+//         return enclosedByCompositeFigure;
+//     });
+//     return enclosingCompositeFigures;
+// }
 
 /**
  * 
