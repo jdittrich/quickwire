@@ -38,12 +38,14 @@ class CreateFigureCommand extends Command{
         super()
         const {cornerPoint1, cornerPoint2, newFigurePrototype} = params; 
         
+        this.drawingView = drawingView;
+
         const newFigureRect = Rect.createFromCornerPoints(cornerPoint1, cornerPoint2);
-        //TODO: the enclosed figures seem not to work yet 9.11.24
         const {rectEnclosesFigures, rectEnclosedByFigure} = drawingView.drawing.findFiguresEnclosingAndEnclosed(newFigureRect);
 
         //create figure
-        const newFigure = newFigurePrototype.copy();
+        const nameFigureClassMapper = drawingView.getNameFigureClassMapper();
+        const newFigure = newFigurePrototype.copy(nameFigureClassMapper);
         this.#newFigureRect = newFigureRect;
         this.#newFigure = newFigure;
         this.#toContainer = rectEnclosedByFigure;
@@ -54,13 +56,17 @@ class CreateFigureCommand extends Command{
         this.#newFigure.setRect(this.#newFigureRect);
         this.#toContainer.appendFigure(this.#newFigure);
         this.#newFigure.appendFigures(this.#appendFigures); 
+        
+        this.drawingView.select(this.#newFigure);
     }
     undo(){
+        this.drawingView.clearSelection(); 
         //reattach formerly contained figures
         this.#toContainer.appendFigures(this.#appendFigures)
         
         //detach figure
         this.#toContainer.detachFigure(this.#newFigure);
+        
     }
     redo(){
         this.do();

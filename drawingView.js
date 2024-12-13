@@ -1,9 +1,10 @@
-import {ViewTransform} from './transform.js'
+import { ViewTransform} from './transform.js'
 import { NoOpTool } from './tools/noopTool.js'
-import {LocalMouseEvent, LocalDragEvent } from './events.js'
-import {NoOpFigure} from './figures.js'
+import { LocalMouseEvent, LocalDragEvent } from './events.js'
+import { NoOpFigure } from './figures.js'
 import { CommandStack } from './commands/commands.js'
-import {Selection} from './selection.js';
+import { Selection} from './selection.js';
+import { Point } from './geom.js'
 
 /**
  * Does: 
@@ -408,6 +409,21 @@ class DrawingView{
         }   
         return handles;
     }
+
+    getNameFigureClassMapper(){
+        return this.#nameFigureClassMapper;
+    }
+
+    fromJSON(JSON){
+        const nameFigureClassMapper = this.getNameFigureClassMapper();
+        const drawing = this.drawing;
+        drawing.fromJSON(JSON,nameFigureClassMapper);
+    }
+    toJSON(){
+        const drawingJSON = drawing.toJSON();
+        return drawingJSON(); 
+    }
+
 
 }
 

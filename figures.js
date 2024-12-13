@@ -270,7 +270,9 @@ class NoOpFigure extends Figure{
     }
 }
 
+
 class CompositeFigure extends Figure{
+
     constructor(param){
         super(param);
         this.appendFigures(param.containedFigures||[]);
@@ -450,7 +452,7 @@ class CompositeFigure extends Figure{
      */
     static createContainedFiguresFromJson(figureJson,nameFigureClassMapper){
         if(!figureJson.containedFigures){return}
-        if(nameFigureClassMapper === "undefined"){
+        if(nameFigureClassMapper === undefined){
             throw new TypeError("nameFigureClassMapper is undefined")
         }
         if(Array.isArray(figureJson)){
@@ -460,18 +462,28 @@ class CompositeFigure extends Figure{
         const containedFiguresInstances = figureJson.containedFigures.map((containedFigureJson)=>{
             const type = containedFigureJson.type;
             const RequiredFigureClass = nameFigureClassMapper.getClass(type) //figureJson.type goes in…
-            const figure = RequiredFigureClass.fromJSON(containedFigureJson);
+            const figure = RequiredFigureClass.fromJSON(containedFigureJson,nameFigureClassMapper);
             return figure;
         })
         return containedFiguresInstances;
     }
 }
 
+
+/**
+ * Creates figure representing a simple rectangle
+ * 
+ * @param {object} param
+ * @param {number} param.y
+ * @param {number} param.x 
+ * @param {number} param.width
+ * @param {number} param.height
+ */
 class RectFigure extends CompositeFigure{
     figureType = "RectFigure";
 
-    constructor(params){
-        super(params);
+    constructor(param){
+        super(param);
     }
 
     drawFigure(ctx){

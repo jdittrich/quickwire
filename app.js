@@ -58,14 +58,35 @@ class App{
 
         this.toolbar = new Toolbar(this.#drawingView);
         this.#domContainer.append(this.toolbar.domElement);
+        
         this.toolbar.addTool("selection", new SelectionTool());
         this.toolbar.addTool("noop", new NoOpTool());
+        
         const rectFigureTemplate = new RectFigure({"x":0,"y":0,"width":10,"height":10});
         this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate));
+        
         const buttonFigureTemplate = new ButtonFigure({"x":0,"y":0,"width":10,"height":10,"label":"OK"}) 
         this.toolbar.addTool("new Button", new CreateFigureTool(buttonFigureTemplate));
+        
         this.toolbar.addAction("undo",function(drawingView){drawingView.undo()});
         this.toolbar.addAction("redo",function(drawingView){drawingView.redo()});
+        this.toolbar.addAction("save",function(){alert("jan, program this save action!")});
+        this.toolbar.addLoadFile("load",function(drawingView, event){
+            //probably refactor this out to: getJSONFromEvent() or similar
+            //guards
+            if(event.target.files === undefined) {return};
+            if(!event.target.files[0].type.match('text.*')){
+                console.log("not a text file");
+                return;
+            }
+            var reader = new FileReader();
+            reader.readAsText(event.target.files[0]);
+            reader.onload = function (event) {
+                alert("jan, you need to programm more here")
+                console.log(event)
+            }
+
+        });
         
         //for debugging
         window.drawingView = this.#drawingView;
@@ -148,19 +169,24 @@ class Toolbar{
         const button = new ToolbarActionButton(label, this.drawingView, callback);
         this.domElement.append(button.domElement);
     }
+    addLoadFile(label,callback){
+        const button = new ToolbarLoadFileButton(label, this.drawingView, callback);
+        this.domElement.append(button.domElement);
+    }
 }
 
 class ToolbarButton{
     domElement = null;
     constructor(label){
         
-        const htmlButton = document.createElement("button");
-        htmlButton.innerText = label;
+        const htmlButton = document.createElement("input");
+        htmlButton.setAttribute("type","button");
+        htmlButton.setAttribute("value",label);
         htmlButton.className = "qwToolbarButton";
         htmlButton.style = "margin-right:2px; height:1.8rem";
         this.domElement = htmlButton;
     }
-}
+}   
 
 class ToolbarToolButton extends ToolbarButton{
     constructor(label, drawingView, tool){
@@ -181,6 +207,17 @@ class ToolbarActionButton extends ToolbarButton{
             callback(drawingView)
         }
         this.domElement.addEventListener("click", callAction,false);
+    }
+}
+
+class ToolbarLoadFileButton extends ToolbarButton{
+    constructor(label, drawingView, callback){
+        super(label);
+        this.domElement.setAttribute("type","file");
+        const callAction = function(event){
+            callback(drawingView, event)
+        }
+        this.domElement.addEventListener("change", callAction,false);
     }
 }
 
