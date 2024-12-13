@@ -1,13 +1,4 @@
 
-//box handle kit i.e. pass figure with a getRect and get the handles back
-//should probably just be some functions: 
-// createResizeCornerHandles
-// createResizeSideHandles
-// createAllResizeHandles
-
-// uses relative locators: RelativeLocator.west(), to be passed to a LocatorHandle superclass
-
-// 
 
 import { SubclassShouldImplementError } from "./errors.js";
 import { Rect, Point } from "./geom.js";
