@@ -82,7 +82,7 @@ class App{
             var reader = new FileReader();
             reader.readAsText(event.target.files[0]);
             reader.onload = function (event) {
-                alert("jan, you need to programm more here")
+                alert("jan, you need to program more here")
                 console.log(event)
             }
 
