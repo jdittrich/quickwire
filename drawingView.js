@@ -418,10 +418,11 @@ class DrawingView{
         const nameFigureClassMapper = this.getNameFigureClassMapper();
         const drawing = this.drawing;
         drawing.fromJSON(JSON,nameFigureClassMapper);
+        this.updateDrawing();
     }
     toJSON(){
-        const drawingJSON = drawing.toJSON();
-        return drawingJSON(); 
+        const drawingJSON = this.drawing.toJSON();
+        return drawingJSON; 
     }
 
 

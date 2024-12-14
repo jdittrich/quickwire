@@ -70,22 +70,30 @@ class App{
         
         this.toolbar.addAction("undo",function(drawingView){drawingView.undo()});
         this.toolbar.addAction("redo",function(drawingView){drawingView.redo()});
-        this.toolbar.addAction("save",function(){alert("jan, program this save action!")});
-        this.toolbar.addLoadFile("load",function(drawingView, event){
-            //probably refactor this out to: getJSONFromEvent() or similar
-            //guards
-            if(event.target.files === undefined) {return};
-            if(!event.target.files[0].type.match('text.*')){
-                console.log("not a text file");
-                return;
-            }
-            var reader = new FileReader();
-            reader.readAsText(event.target.files[0]);
-            reader.onload = function (event) {
-                alert("jan, you need to program more here")
-                console.log(event)
-            }
+        this.toolbar.addAction("save",function(drawingView){
+            //getJSON and convert to string
+            const drawingJson = drawingView.toJSON();
+            const drawingJsonAsString = JSON.stringify(drawingJson);
 
+            // create text file blob
+            const drawingFileBlob = new Blob([drawingJsonAsString], {type: "application/json"});
+
+            //create a link to the file blob
+            const fileUrl = URL.createObjectURL(drawingFileBlob);
+
+            //create link
+            const link = document.createElement("a");
+            link.href = fileUrl;
+            link.download = "quickWireDrawing.json";
+            
+            // "click" link to trigger "download"
+            link.click();
+
+            //free memory again
+            URL.revokeObjectURL(fileUrl);
+        });
+        this.toolbar.addLoadFile("load",function(drawingView, drawingJson){
+            drawingView.fromJSON(drawingJson);
         });
         
         //for debugging
@@ -170,7 +178,7 @@ class Toolbar{
         this.domElement.append(button.domElement);
     }
     addLoadFile(label,callback){
-        const button = new ToolbarLoadFileButton(label, this.drawingView, callback);
+        const button = new ToolbarLoadFileAsJsonButton(label, this.drawingView, callback);
         this.domElement.append(button.domElement);
     }
 }
@@ -210,12 +218,27 @@ class ToolbarActionButton extends ToolbarButton{
     }
 }
 
-class ToolbarLoadFileButton extends ToolbarButton{
+class ToolbarLoadFileAsJsonButton extends ToolbarButton{
     constructor(label, drawingView, callback){
         super(label);
         this.domElement.setAttribute("type","file");
         const callAction = function(event){
-            callback(drawingView, event)
+            //guards
+            if(event.target.files === undefined) {return};
+            if(!event.target.files[0].type.match('application/json')){
+                console.log("not a json file");
+                return;
+            }
+            //read text file as JSON
+            var reader = new FileReader();
+            reader.readAsText(event.target.files[0]);
+            reader.onload = function (event) {
+               const resultString = reader.result;
+               const resultJSON = JSON.parse(resultString)
+               
+               //finally, call the callback
+               callback(drawingView,resultJSON);
+            }
         }
         this.domElement.addEventListener("change", callAction,false);
     }

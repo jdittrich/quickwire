@@ -61,7 +61,7 @@ class Drawing extends CompositeFigure{
     }
     fromJSON(JSON, nameFigureClassMapper){
         //guards
-        if(JSON.figureType !== this.figureType){
+        if(JSON.type !== this.figureType){
             throw new Error(`Passed JSON was not of type drawing (${this.figureType}), but was ${JSON.figureType}`)
         }
 
