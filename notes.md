@@ -316,6 +316,53 @@ Where would that happen?
 * copy an existing figure for mere duplication, using a command (which knows the selected figure, drawingView and drawing) 
 * after being called once, it figures will be copied by other figures. 
 
-verdict: 
+verdict: DONE before 10.12.24
 
-- 
+## Disposing handles on unselection
+Bug: Create a figure, select it, press undo. The handles still exist. Draw a handle. (bad state happens)
+
+I assume this is based in not clearing selection and thus keeping to return a reference to the figure and its handles.
+When would we need to clear selections?
+- Delete object (don't worry about keeping the selection around, inkscape e.g. does not)
+- We click somewhere else
+
+## Load, unload
+Thats what the ebook notes parser does: 
+
+`const fileselector = document.getElementById(idFileSelector).addEventListener("change",handleChange);
+
+const checkbox = document.getElementById(idSelectBlockCheckbox);
+checkbox.addEventListener("change",function(){
+    if(checkbox.checked){
+        document.getElementById(idTableContainer).classList.add(ClassSelectBlockOnTable);
+    } else {
+        document.getElementById(idTableContainer).classList.remove(ClassSelectBlockOnTable);
+    }
+  });
+
+function handleChange(evt){
+var that = this;
+  if (evt.target.files === undefined) {
+    return
+  }
+  if (!evt.target.files[0].type.match('text.*')) {
+    console.log("not a text file");
+    return;
+  }
+  var reader = new FileReader();
+  reader.readAsText(evt.target.files[0]);
+  reader.onload = function (event) {
+    that.tabledata = null;
+    that.parseerror = null;
+
+    var notes = parsenotes(event.target.result);
+    // maybe return an object holding: table, type, error? 
+    // if there is error, we can display an…error. 
+    // If all is fine, we can get richer infos etc. 
+    if (notes.error) {
+      showError(notes.error);
+    } else {
+      showTable(notes.result);
+    }
+  }
+}`
