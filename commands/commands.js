@@ -167,6 +167,7 @@ class ChangeFigureRectCommand extends Command{
         this.#appendFigures = rectEnclosesFigures;
     }
     do(){
+        //note: the order of operations is relevant!
         this.#figure.changeRect(this.#changedRect); //moves also the currently contained figures
         this.#figure.appendFigures(this.#appendFigures); //appends figures that are enclosed in the new Rectangle
         this.#toContainer.appendFigures(this.#figuresNotContainedAnymore); //if new rectangle is smaller, some figures might not be enclosed anymore
