@@ -1,7 +1,7 @@
 import { Drawing } from "./drawing.js"
 import { DrawingView } from "./drawingView.js"
 import { Point } from "./geom.js"
-import { RectFigure, ButtonFigure } from "./figures.js"
+import { RectFigure, ButtonFigure, ExperimentFigure } from "./figures.js"
 import { SelectionTool } from "./tools/selectionTool.js";
 import { NoOpTool } from "./tools/noopTool.js";
 import { CreateFigureTool } from "./tools/createFigureTool.js";
@@ -64,8 +64,11 @@ class App{
         const rectFigureTemplate = new RectFigure({"x":0,"y":0,"width":10,"height":10});
         this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate));
         
-        const buttonFigureTemplate = new ButtonFigure({"x":0,"y":0,"width":10,"height":10,"label":"OK"}) 
+        const buttonFigureTemplate = new ButtonFigure({"x":0,"y":0,"width":10,"height":10,"label":"OK"});
         this.toolbar.addTool("new Button", new CreateFigureTool(buttonFigureTemplate));
+
+        const experimentFigureFigureTemplate = new ExperimentFigure({"x":0,"y":0,"width":10,"height":10});
+        this.toolbar.addTool("new exFig", new CreateFigureTool(experimentFigureFigureTemplate), "experimental Figure for… experiments");
         
         this.toolbar.addAction("undo",function(drawingView){drawingView.undo()});
         this.toolbar.addAction("redo",function(drawingView){drawingView.redo()});
@@ -155,6 +158,30 @@ class App{
 
         const localPosition = canvasOffset.offsetTo(eventPosition);
         return localPosition;
+    }
+}
+
+// a little in-line text editor to change lables
+class AppTextEditor{
+    domElement = null; 
+
+    #domInputField = null; 
+    #domOkButton = null; 
+    #domCancelButton = null; 
+
+    #figure = null;
+
+    constructor(){
+
+    }
+    removeEditor(){
+
+    }
+    commitChange(){
+
+    }
+    cancelChange(){
+
     }
 }
 
