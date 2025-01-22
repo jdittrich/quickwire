@@ -58,20 +58,20 @@ class App{
         this.toolbar = new Toolbar(this.#drawingView);
         this.#domContainer.append(this.toolbar.domElement);
         
-        this.toolbar.addTool("selection", new SelectionTool());
-        this.toolbar.addTool("noop", new NoOpTool());
+        this.toolbar.addTool("selection", new SelectionTool(), "select, drag or change handles");
+        this.toolbar.addTool("noop", new NoOpTool(), "this tool does nothing");
         
         const rectFigureTemplate = new RectFigure({"x":0,"y":0,"width":10,"height":10});
-        this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate));
+        this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate),"simple rectangle");
         
         const buttonFigureTemplate = new ButtonFigure({"x":0,"y":0,"width":10,"height":10,"label":"OK"});
-        this.toolbar.addTool("new Button", new CreateFigureTool(buttonFigureTemplate));
+        this.toolbar.addTool("new Button", new CreateFigureTool(buttonFigureTemplate), "a button");
 
         const experimentFigureFigureTemplate = new ExperimentFigure({"x":0,"y":0,"width":10,"height":10});
         this.toolbar.addTool("new exFig", new CreateFigureTool(experimentFigureFigureTemplate), "experimental Figure for… experiments");
         
-        this.toolbar.addAction("undo",function(drawingView){drawingView.undo()});
-        this.toolbar.addAction("redo",function(drawingView){drawingView.redo()});
+        this.toolbar.addAction("undo",function(drawingView){drawingView.undo()}, "undo last action");
+        this.toolbar.addAction("redo",function(drawingView){drawingView.redo()}, "redo undone action");
         this.toolbar.addAction("save",function(drawingView){
             //getJSON and convert to string
             const drawingJson = drawingView.toJSON();
@@ -93,10 +93,10 @@ class App{
 
             //free memory again
             URL.revokeObjectURL(fileUrl);
-        });
+        }, "download current wireframe as json");
         this.toolbar.addLoadFile("load",function(drawingView, drawingJson){
             drawingView.fromJSON(drawingJson);
-        });
+        }, "create a wireframe from a json file");
         
         //for debugging
         window.drawingView = this.#drawingView;

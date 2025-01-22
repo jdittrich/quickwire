@@ -7,27 +7,28 @@ class Toolbar{
         this.domElement.className = "qwToolbar"
         this.drawingView = drawingView;
     }
-    addTool(label, tool){
-        const button = new ToolbarToolButton(label, this.drawingView, tool);
+    addTool(label, tool, tooltip){
+        const button = new ToolbarToolButton(label, this.drawingView, tool, tooltip);
         this.domElement.append(button.domElement);
     }
-    addAction(label,callback){
-        const button = new ToolbarActionButton(label, this.drawingView, callback);
+    addAction(label,callback, tooltip){
+        const button = new ToolbarActionButton(label, this.drawingView, callback, tooltip);
         this.domElement.append(button.domElement);
     }
-    addLoadFile(label,callback){
-        const button = new ToolbarLoadFileAsJsonButton(label, this.drawingView, callback);
+    addLoadFile(label,callback, tooltip){
+        const button = new ToolbarLoadFileAsJsonButton(label, this.drawingView, callback, tooltip);
         this.domElement.append(button.domElement);
     }
 }
 
 class ToolbarButton{
     domElement = null;
-    constructor(label){
+    constructor(label, tooltip=""){
         
         const htmlButton = document.createElement("input");
         htmlButton.setAttribute("type","button");
         htmlButton.setAttribute("value",label);
+        htmlButton.setAttribute("title",tooltip);
         htmlButton.className = "qwToolbarButton";
         htmlButton.style = "margin-right:2px; height:1.8rem";
         this.domElement = htmlButton;
@@ -35,8 +36,8 @@ class ToolbarButton{
 }   
 
 class ToolbarToolButton extends ToolbarButton{
-    constructor(label, drawingView, tool){
-        super(label);
+    constructor(label, drawingView, tool, tooltip){
+        super(label,tooltip);
         
         const changeTool = function(){
             drawingView.changeTool(tool);
@@ -47,8 +48,8 @@ class ToolbarToolButton extends ToolbarButton{
 }
 
 class ToolbarActionButton extends ToolbarButton{
-    constructor(label, drawingView, callback){
-        super(label);
+    constructor(label, drawingView, callback, tooltip){
+        super(label, tooltip);
         const callAction = function(){
             callback(drawingView)
         }
@@ -57,8 +58,8 @@ class ToolbarActionButton extends ToolbarButton{
 }
 
 class ToolbarLoadFileAsJsonButton extends ToolbarButton{
-    constructor(label, drawingView, callback){
-        super(label);
+    constructor(label, drawingView, callback, tooltip){
+        super(label, tooltip);
         this.domElement.setAttribute("type","file");
         const callAction = function(event){
             //guards
