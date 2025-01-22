@@ -82,18 +82,16 @@ class DrawingView{
         this.#ctx.resetTransform(); //so the next one can deal with an untransformed canvas.
     }
     #drawHandles(){
-        if(this.#dragging){return}
-        const handles = this.getHandles(this);
+        if(this.#dragging){return} //hides handles during dragging, as currently handle positions are not updated during drag
+        const handles = this.getHandles();
         handles.forEach(handle=> handle.draw(this.#ctx));
     }
 
     //#region: previews
-    #previewElement = new NoOpFigure();
-    #previewedElement = null; 
+    #previewedElement = null; //the element which change should be previewed
+    #previewElement = new NoOpFigure(); //the copy used to preview the changes
 
     #drawPreviews(){ 
-        // that probably can be sped up by entering a preview mode, triggered by the tool
-        // saving the canvas state and just redrawing whats new
         this.#ctx.setTransform(...this.#transform.toArray());
         this.#previewElement.draw(this.#ctx);
         this.#ctx.resetTransform();
@@ -118,11 +116,7 @@ class DrawingView{
         figureToPreview.setIsVisible(false);
     }
 
-    /**
-     * End the preview of a figure and make the formerly previewed Figure visible again. 
-     * 
-     */
-    endPreview(){ //replaces preview with NOOP
+    endPreview(){
         this.#previewElement = new NoOpFigure();
         this.#previewedElement.setIsVisible(true);
         this.#previewedElement = null; 
@@ -338,14 +332,6 @@ class DrawingView{
     removeFigure(figure){
        figure.remove();
     }
-
-
-    // createFigureFromJson(figureJson){
-    //     const figureClassName = figureJson.type; 
-    //     const FigureClass = this.#figureNameClassMapper(figureClassName);
-    //     const figure = new FigureClass(figureJson);
-    //     return figure; 
-    // }
 
     /**
      * execute a new command and put it on stack for undoable actions
