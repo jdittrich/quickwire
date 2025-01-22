@@ -118,9 +118,9 @@ export const test_rect = QUnit.module('rect', function() {
         const rect4_partial = new Rect({x:25,y:25, width:20, height:20}); // 1,2 partial intersection
         const rect5_outside = new Rect({x:100, y:100, width:20, height:20}); // 2 totally outside 1
 
-        assert.true( rect1.enclosesRect(rect2_inner));
-        assert.false(rect1.enclosesRect(rect3_outer));
-        assert.false(rect1.enclosesRect(rect4_partial));
-        assert.false(rect1.enclosesRect(rect5_outside));
+        assert.true( rect1.enclosesRect(rect2_inner), "rect 1 encloses 2");
+        assert.false(rect1.enclosesRect(rect3_outer), "rect 1 does not  enclose 3 (but 3 does 1)");
+        assert.false(rect1.enclosesRect(rect4_partial), "rect 1 does not enclose 4 (but intersects)");
+        assert.false(rect1.enclosesRect(rect5_outside), "rect 1 does not enclode 4 (no intersection)");
     });
 });
