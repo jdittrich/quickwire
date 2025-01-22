@@ -13,11 +13,16 @@ class SelectionTool extends AbstractTool{
         
         const figuresEnclosingPoint = this.drawingView.drawing.findFiguresEnclosingPoint(currentPositionDocument);
         
+        //TODO:  if we want double-clickable text, we need some mechanism to trigger that.
+        // maybe it is something like a sub-element that is drawable (but not another figure)
+        // and knows its own rectangle, as derived from the figure it is in?
+
+        //get handles from an already selected figure.
         const handles = this.drawingView.getHandles();
         const handleUnderPoint = handles.find(handle=> handle.enclosesPoint(currentPositionDocument))
         
         if(handleUnderPoint){
-            //if we are over a handle, keep selection, change handle
+            //if we are over a handle,  keep selection, change handle
             this.#childTool = new HandleTracker(handleUnderPoint);
         } else if (figuresEnclosingPoint.length === 0){//no figures under mouse
             //if we are not over a figure, unselect and go to pan mode
@@ -76,6 +81,7 @@ class DragTracker extends AbstractTool{
         super();
         this.#figureToDrag = figureToDrag;
     }
+
     onDragstart(event){
         event.drawingView.startPreviewOf(this.#figureToDrag);
     }
@@ -110,6 +116,11 @@ class HandleTracker extends AbstractTool{
         super();
         this.#handleToDrag = handle;
     }
+    // I thought of this to have clickable handles (but it won't be "to drag", it it is just clickable)
+    // onMousedown(event){
+    //     this.#handleToDrag.onMousedown(event);
+    //     event.drawingView.updateDrawing();
+    // }
     onDragstart(dragEvent){
         this.#handleToDrag.onDragstart(dragEvent)
         dragEvent.drawingView.updateDrawing();
