@@ -91,6 +91,7 @@ class Point{
 
 
 class Rect{
+    // should rect cover top, left, bottom, right?
     /**
      * A rectangle, positioned on a coordinate system
      * @param {object} createRectParam
@@ -108,6 +109,19 @@ class Rect{
         this.height = createRectParam.height;
         this.y = createRectParam.y;
         this.x = createRectParam.x;
+    }
+
+    get right(){
+        return this.x + this.width;
+    }
+    get bottom(){
+        return this.y + this.height;
+    }
+    get top(){
+        return this.y;
+    }
+    get left(){
+        return this.x;
     }
 
     /**
@@ -253,8 +267,10 @@ class Rect{
     }
 
     /**
-     * Creates a rectangle from two points with the absolute positions of two 
-     * opposed corners of the rectangle
+     * 
+     * @param {Point} point1 
+     * @param {Point} point2 
+     * @returns {Rect}
      */
     static createFromCornerPoints(point1, point2){
         //these can be any two points in any order 
