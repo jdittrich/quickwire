@@ -194,8 +194,6 @@ Storage format interface has a store and a restore method; the `StandardStorageF
 The writing to disk is done by a class called "StorableOutput" and the reading "StorableInput"
 
 
-
-
 ### Commonalities
 
 * Selection Tool: 
@@ -326,43 +324,151 @@ When would we need to clear selections?
 - Delete object (don't worry about keeping the selection around, inkscape e.g. does not)
 - We click somewhere else
 
-## Load, unload
-Thats what the ebook notes parser does: 
+## Next up: A mini editor and clicking a checkbox
+### Mini editor
+* Will happen on app layer (i.e. not canvas rendered but on the HTML)
+* is an input field with a checkmark and a cancel next to it on it
+* can be on-canvas placed
+* triggered by double click on a text (should that be a handle? See "clicking the checkbox")
 
-`const fileselector = document.getElementById(idFileSelector).addEventListener("change",handleChange);
+### clicking the checkbox
+*  If you click on the checkbox it will be toggled without any additional UI. (This is inspired by whimsical, although other software might do the same)
+* needs a checkbox figure (or a checkbox list?) 
+* Needs some additional model of hit checking for on-figure controls (similar to handles, but not for dragging? Or maybe it is a handle but it does not do any dragging)
 
-const checkbox = document.getElementById(idSelectBlockCheckbox);
-checkbox.addEventListener("change",function(){
-    if(checkbox.checked){
-        document.getElementById(idTableContainer).classList.add(ClassSelectBlockOnTable);
-    } else {
-        document.getElementById(idTableContainer).classList.remove(ClassSelectBlockOnTable);
-    }
-  });
+## Not exactly handles
+What I need for being able to click the checkbox is: 
+* graphical representation of a checkbox
+* check if a click is "in" the representation
+* influence the property of the figure i.e. switch the checkbox value from true to false
+* it makes sense to bind graphical represenatation+ position checking together so I need to calculate the rectangle only once.
+* like handles, they should be drawable, unlike handles, they resize with the document. 
+* sooooo....
+drawable(){ //OR I pass attributes like rect etc. and a separate toggle thingy?
+  #figure
+  #attribute
+  constructur(outerRect, innerRectConstraints){
 
-function handleChange(evt){
-var that = this;
-  if (evt.target.files === undefined) {
-    return
   }
-  if (!evt.target.files[0].type.match('text.*')) {
-    console.log("not a text file");
-    return;
-  }
-  var reader = new FileReader();
-  reader.readAsText(evt.target.files[0]);
-  reader.onload = function (event) {
-    that.tabledata = null;
-    that.parseerror = null;
+  getRect()
+  getConstraints()
+  enclosesPoint()
+  draw()
+  eventHandlers()
+}
 
-    var notes = parsenotes(event.target.result);
-    // maybe return an object holding: table, type, error? 
-    // if there is error, we can display an…error. 
-    // If all is fine, we can get richer infos etc. 
-    if (notes.error) {
-      showError(notes.error);
-    } else {
-      showTable(notes.result);
-    }
-  }
-}`
+### innerRectConstraints…
+Use the following defintion to calculate an rect with absolute coordinates based on an outer rect and the constraints. 
+vertical: top, width, bottom → define two, the one not specififed will be calculated
+horizontal: left, height, right → define two, the one not specififed will be calculated
+
+what this does not do is flipping the coordinates for RTL languages thought!
+
+### Creating a checkboxlist
+Attributes: Lable (for the whole list), array with lables for the points, selected option
+Knows: figure-attributes, its own index. 
+
+
+## sharing code, having interfaces
+QUESTION: Since the subfigure shares a lot with figure, what could the object hierarchies be? What are the needed interfaces?`
+Interfaces:
+* Draggable → for handle, figure 
+* Clickable → for a checkbox (might: composite)
+* Drawable  → for handle, figure, subfigure (see: composite)
+* Attributes → for figure 
+* maybe Hoverable? → for all interactive things?
+* Composable → for figure, maybe also subfigure. NOTE: composite handling for draw()
+* Rect-able (has a rect, can be collision-checked)
+* So we get: 
+* mainFigure with draggable, composable, drawable, hoverable, attributable 
+* subfigure with  clickable, composable, drawable, hoverable
+* handle with draggable, drawable, hoverable
+* so mainFigure and subfigure share: getRect(), draw(), composable, 
+* All share: getRect(), draw()
+
+MF  | SF
+Y   | Y   getRect (absolute)
+Y   | Y   getRelation (t,r,b,l,width, height) to outerFigure. Or maybe call this offsets?
+Y   | Y   draw
+Y   | Y   contains subfigures
+Y   | ?   handles. Probably not [1] 
+Y   | N   contains mainfigures
+?   | ?   draw hover state? [2]
+Y   | Y   React to doubleclick
+Y   | N   Mutable Attributes 
+N   | Y   "Knows" its own data it reflects (nth item in list)
+Y   | Y   Constraints to main figure for resizes (ResizeContraint?)
+
+[1] Knowing handles implies knowign drawingView and firing commands.
+    So, no? Can I bind handle to a rect, though? (scrollbar.indicator.getRect()?)
+[2] Probably not, we can let something else draw the hover state on top of things. 
+    It would be better anyway, since I do not need to define it over and over again.
+
+Parent figure of a main figure: always a mainFigure
+Parent figure of a subfigure: always a Figure
+ 
+## Attributes, again
+Attributes manages data about the figure:  position, checked checkboxes, visibility…
+Every attribute has a string-based key. 
+this.attributes.get("key")
+For now, I could also use "fake array keys": "checkbox-1", "checkbox-2"
+ 
+ → checkbox: label, isChecked
+ → radiobutton-list: label, buttons
+
+ What does it mean if the list is a string:
+ + I am selected
+ I am unselected
+ I am unselected
+
+hasAttributeString<boolean>
+getAttributeString<string>
+setAttributeString(string)
+
+Probably, the solution to my problem is creating a subFigureList-Class: It can toJSON and fromJSON, gets a JSON Array
+It is a type of composite, in that it has a draw(), a enclosesPoint() etc. 
+
+Remember that attributes need to be changed via a command that specifies which attribute to change
+
+## How to change attributes
+
+I think it is best to change attributes via handles that react to drag or click. This way all changes remain at "tool likes" (tools or handles) and not at the level of figures. The problem however might be that handles are only active when the figure is selected, making attribute changes need a double click if clicking.  
+
+## Attribute Structure
+* I guess it is the easiest to have flat attributes, like `entryLables:["foo","bar", "baz"]`, `selectedEntry:2` (would select "bar")
+* Subfigures themselves might know their key and index?
+* needed methods as taken from attributeFigure: getAttributes → array, set, get→value, hasAttribute→bool, 
+
+## Reduce repetitive code between figuretpyes
+
+* I guess a lot of JSON creation/reading can be delegated to an attributes-object
+* Drawing can be delegated to subfigures
+
+## TODO 
+Refactor:
+* CompositeFigure should be main figure class
+* Maybe have figure as class for both mainfigure and subfigure?
+
+New stuff
+* Introduce a doubleclick-delegation → mouse event handling section in drawingView, basically like mouseDown, I guess (?). 
+* create a subfigure object
+* But first…
+  * Create an Attributes-class (managing attributes internally)
+  * Create a stable delegation of MainFigure to Attributes-class
+  * Create a command to change attributes of figures: `new ChangeAttributeCommand(figure, drawingView, "attribute", "value")`
+    * Maybe this is enough, maybe I need a "add entry", "delete entry" etc. 
+    * btw. Backbone seems to work via ids that models know. Models do NOT know their position in a list (makes sense!)
+  * Maybe this needs either primitive values OR their cast to JSON in case Rect or Point are used? (string, number as well as object literals do not have a native toJSON, so I could check)
+  * Maybe I need an "lableList" and "selectableLableList" as Data Objects? They might be static, so they can be reconstructed from their JSON and manipulated? Might also be good for undo/redo not to nest changeable entities. 
+
+Bugs
+* Prevent drawing being dragged out of bounds
+* prevent figures being dropped out of drawing
+
+drawing.draw()
+drawing.attributes()
+drawing.subfigures
+
+## How to move inner figures when I switch to a model that allows to set constraints?
+
+Instead of setting moveBy from the containing figure I would need to "updateDependendRect".

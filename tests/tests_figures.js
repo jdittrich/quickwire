@@ -15,7 +15,6 @@ const figureAbstractClass = QUnit.module('Abstract Figure Class', function(){
     // get position
     // set position
     // movePositionBy
-
     //visibility
     //container offsets
 })
