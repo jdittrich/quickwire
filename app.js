@@ -1,7 +1,8 @@
 import { Drawing } from "./drawing.js"
 import { DrawingView } from "./drawingView.js"
 import { Point } from "./geom.js"
-import { RectFigure, ButtonFigure, ExperimentFigure } from "./figures.js"
+import { RectFigure } from "./figures/rectFigure.js"
+import { ButtonFigure } from "./figures.js"
 import { SelectionTool } from "./tools/selectionTool.js";
 import { NoOpTool } from "./tools/noopTool.js";
 import { CreateFigureTool } from "./tools/createFigureTool.js";
