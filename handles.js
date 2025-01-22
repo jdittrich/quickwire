@@ -104,7 +104,45 @@ class Handle{
     onDragend(dragEvent){
         throw new SubclassShouldImplementError("onDragend", "Handle");
     }
+    // onMousedown(mouseEvent){
+    //     //throw new SubclassShouldImplementError("onDragend", "Handle");
+    // }
+    // onMouseUp(mouseEvent){
+    //     //throw new SubclassShouldImplementError("onDragend", "Handle");
+    // }
 }
+
+//experimental
+class ToggleParameterHandle extends Handle{
+    #subfigure
+    #parameter
+
+    constructor(figure,drawingView,subfigure,parameter){
+        super(figure,drawingView);
+        if(!subfigure || !parameter){throw new Error("one or both of subfigure or parameter not passed.")}
+        this.#subfigure = subfigure;
+        this.#parameter = parameter;
+    }
+    draw(ctx){ // FOUND ERROR: THIS IS DRAWN NON-TRANSFORMED, SO IT WILL BE OFF (Try be zooming) 
+        const {x,y,width,height} = this.getScreenRect();
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "green";
+        ctx.strokeRect(x+2,y+2,width,height);
+        ctx.restore();
+    }
+    getScreenRect(){
+        return this.#subfigure.getRect();
+    }
+    onMousedown(mouseEvent){
+        console.log("calledMouseup")
+        const figure = this.getFigure();
+        const oldParam = figure[this.#parameter];
+        const newParam = !oldParam;
+        figure[this.#parameter] = newParam;
+    }
+}
+
 
 class ResizeHandle extends Handle{
     constructor(figure,drawingView){
@@ -227,4 +265,4 @@ function createAllResizeHandles(figure,drawingView){
     return [brHandle,trHandle,blHandle,tlHandle];
 }
 
-export {createAllResizeHandles}
+export {createAllResizeHandles, ToggleParameterHandle}
