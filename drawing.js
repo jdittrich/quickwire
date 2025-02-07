@@ -1,9 +1,9 @@
-import {Rect} from './geom.js';
-import {CompositeFigure} from './figures.js';
-import {findFiguresBelowPoint, findEnclosingFigures, findEnclosedFigures, findFiguresEnclosingAndEnclosed} from './hitTest.js';
+import { Rect } from './data/rect.js';
+import { Figure } from './figures/figure.js';
+import { findFiguresBelowPoint, findEnclosingFigures, findEnclosedFigures, findFiguresEnclosingAndEnclosed} from './hitTest.js';
 
 // the drawing contains other figures, so it is basically a composite figure
-class Drawing extends CompositeFigure{
+class Drawing extends Figure{
     figureType = "Drawing";
     constructor(){
         super({

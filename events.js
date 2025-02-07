@@ -1,7 +1,7 @@
 
 // import for types
 //import { DrawingView } from "./drawingView.js";
-import { Point } from "./geom.js";
+import { Point } from "./data/point.js";
 import {ViewTransform} from "./transform.js";
 
 // TODO: 10.11.24: Maybe put the relative movement conversion that does consider zoom but not drag into its own function,

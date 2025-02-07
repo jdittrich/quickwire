@@ -1,4 +1,4 @@
-import {Figure} from "./figures.js"
+import {Figure} from "./figures/figure.js"
 
 class Selection{
     #selectedFigure = null; 

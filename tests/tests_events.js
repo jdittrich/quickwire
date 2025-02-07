@@ -1,4 +1,4 @@
-import {Point} from "../geom.js";
+import {Point} from "../data/point.js";
 import {LocalMouseEvent, LocalDragEvent} from "../events.js";
 import { DrawingView } from "../drawingView.js";
 import { Drawing } from "../drawing.js";

@@ -1,9 +1,11 @@
-import { Point } from "./geom.js"
+import { Point } from "./data/point.js"
 
 import {mat2d, vec2} from "./libraries/glmatrix/index.js"
 
 /**
- * Affine transform matrix operations. Is its own class to: 
+ * Provides affine transform matrix operations. 
+ * 
+ * Is its own class to: 
  * a) provide a simpler interface
  * b) encapsulate matrix math library
  * 

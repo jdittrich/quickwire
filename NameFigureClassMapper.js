@@ -1,4 +1,4 @@
-import {Figure} from './figures.js';
+import {Figure} from './figures/figure.js';
 
 /**
  * Every serialized object has its type as a string

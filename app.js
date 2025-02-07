@@ -1,8 +1,11 @@
 import { Drawing } from "./drawing.js"
 import { DrawingView } from "./drawingView.js"
-import { Point } from "./geom.js"
+import { Point } from "./data/point.js"
+
 import { RectFigure } from "./figures/rectFigure.js"
-import { ButtonFigure } from "./figures.js"
+import { ButtonFigure } from "./figures/buttonFigure.js"
+import { RadioButtonListFigure } from "./figures/radioButtonListFigure.js"
+
 import { SelectionTool } from "./tools/selectionTool.js";
 import { NoOpTool } from "./tools/noopTool.js";
 import { CreateFigureTool } from "./tools/createFigureTool.js";
@@ -68,8 +71,8 @@ class App{
         const buttonFigureTemplate = new ButtonFigure({"x":0,"y":0,"width":10,"height":10,"label":"OK"});
         this.toolbar.addTool("new Button", new CreateFigureTool(buttonFigureTemplate), "a button");
 
-        const experimentFigureFigureTemplate = new ExperimentFigure({"x":0,"y":0,"width":10,"height":10});
-        this.toolbar.addTool("new exFig", new CreateFigureTool(experimentFigureFigureTemplate), "experimental Figure for… experiments");
+        const experimentFigureFigureTemplate = new RadioButtonListFigure({"x":0,"y":0,"width":10,"height":10});
+        this.toolbar.addTool("new Radio", new CreateFigureTool(experimentFigureFigureTemplate), "RadioButtonList");
         
         this.toolbar.addAction("undo",function(drawingView){drawingView.undo()}, "undo last action");
         this.toolbar.addAction("redo",function(drawingView){drawingView.redo()}, "redo undone action");

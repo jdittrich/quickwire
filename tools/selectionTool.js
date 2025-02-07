@@ -116,11 +116,10 @@ class HandleTracker extends AbstractTool{
         super();
         this.#handleToDrag = handle;
     }
-    // I thought of this to have clickable handles (but it won't be "to drag", it it is just clickable)
-    // onMousedown(event){
-    //     this.#handleToDrag.onMousedown(event);
-    //     event.drawingView.updateDrawing();
-    // }
+    onMousedown(event){
+        this.#handleToDrag.onMousedown(event);
+        event.drawingView.updateDrawing();
+    }
     onDragstart(dragEvent){
         this.#handleToDrag.onDragstart(dragEvent)
         dragEvent.drawingView.updateDrawing();

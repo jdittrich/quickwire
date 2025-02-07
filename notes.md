@@ -472,3 +472,16 @@ drawing.subfigures
 ## How to move inner figures when I switch to a model that allows to set constraints?
 
 Instead of setting moveBy from the containing figure I would need to "updateDependendRect".
+
+## Handles? 
+
+I could have: 
+Handle →  → ListItemToggle,editText....
+          → ResizeHandle → nwResizeHandle etc.
+Where a handle always has a getRect (local), getScreenRect(), draw(), getColor()
+I can still push stuff into intermediate classes if needed. 
+
+## Issues 6.2.25
+* Add a toJSON to Point
+* Add a test for toJSON on point 
+* use the point/rect class in the figure serialization

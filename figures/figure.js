@@ -1,8 +1,13 @@
 import { SubclassShouldImplementError } from '../errors.js';
-import { Rect } from '../geom.js';
+import { Rect } from '../data/rect.js';
+import {} from './figureAttributes.js';
 
 class Figure {
-    #rect = null; 
+    #rect = null;
+    #attributes = new Map(); //store and retrive attributes
+    #attributeKeys = new Set(); //which attribute keys are possible on the figure. Default: Empty
+
+    #containedBy = null;
 
     constructor(param){
         const {x,y,width,height} = param;
@@ -13,6 +18,7 @@ class Figure {
             "width":width,
             "height":height
         }));
+
         this.appendFigures(param.containedFigures||[]);
     }
     
@@ -24,9 +30,11 @@ class Figure {
      * Usually not overwritten by subclasses.
      * @param {CanvasRenderingContext2D} ctx 
      */
-    draw(ctx){
+    draw(ctx){ // NOTE: Maybe add the save()/restore() here, so that changes to fill/stroke do not carry over?
         if(this.getIsVisible()){
+            ctx.save()
             this.drawFigure(ctx);
+            ctx.restore();
             this.drawContainedFigures(ctx);
         }
     }
@@ -36,7 +44,7 @@ class Figure {
      * Called only internally by draw.
      * @param {CanvasRenderingContext2D} ctx 
      */
-    drawFigure(ctx){ 
+    drawFigure(ctx){
         throw new SubclassShouldImplementError("drawFigure","CompositeFigure");
     }
 
@@ -49,8 +57,56 @@ class Figure {
         this.#containedFigures.forEach(figure => figure.draw(ctx));
     }
 
+    //#region: Attributes
+    /**
+     * Get the attribute by key
+     * @param {String} key 
+     */
+    getAttribute(key){
+        if(!this.#attributeKeys.has(key)){
+            throw new Error("Tried to set attribute with an unregistered key. Register keys with registerAttribute")
+        }
+        const value  = this.#attributes.get(key);
+        return value; 
+    }
+
+    /**
+     * Set an attribute value on key.
+     * @param {String} key 
+     * @param {*} value 
+     */
+    setAttribute(key,value){
+        if(!this.#attributeKeys.has(key)){
+            throw new Error("Tried to set attribute with an unregistered key. Register keys with registerAttribute")
+        }
+        this.#attributes.set(key,value);
+    }
+    /**
+     * Registers additional allowed keys.
+     * Usually called in constructor.
+     * @param {string[]} keys 
+     */
+    registerAttribute(keys){
+        keys.forEach((key,index)=>{
+            if( typeof key !== "string"){
+                throw new TypeError("A key at index "+index+" was not of type \"string\", but of type "+typeof key)
+            }
+            this.#attributeKeys.add(key);
+        });
+    };
+
+    /**
+     * Gets allowed attribute keys
+     * @returns {Array}
+     */
+    getAttributeKeys(){
+        const keysOfSet = this.#attributeKeys.keys();
+        const arrayOfKeys = Array.from(keysOfSet);
+        return arrayOfKeys;
+    }
+
     //#region: child management
-    #containedBy = null;
+    
     
     /**
      * @param {Figure} figure 
@@ -267,7 +323,7 @@ class Figure {
      */
     setRectByPoints(point1,point2){
         const newRect = Rect.createFromCornerPoints(point1, point2);
-        this.setRect(newRect);
+        this.changeRect(newRect);
     }
 
     /**
@@ -276,6 +332,10 @@ class Figure {
      */
     changeRect(changedRect){
         const oldRect = this.getRect();
+        if(!oldRect){
+            this.setRect(changedRect);
+            return;
+        }
         const oldPosition = oldRect.getPosition();
         const newPosition = changedRect.getPosition();
         const moveBy = oldPosition.offsetTo(newPosition);

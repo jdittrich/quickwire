@@ -1,6 +1,7 @@
 
 
-import { Rect, Point } from "../geom.js";
+import { Rect  } from "../data/rect.js";
+import { Point } from "../data/point.js";
 
 /**
  * Extend to create new Commands
@@ -240,4 +241,4 @@ class CommandStack extends EventTarget{
     }
 }
 
-export {CommandStack, CreateFigureCommand,MoveFigureCommand, ChangeFigureRectCommand}
+export {CommandStack, Command, CreateFigureCommand,MoveFigureCommand, ChangeFigureRectCommand}

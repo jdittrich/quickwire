@@ -1,10 +1,10 @@
 import { ViewTransform} from './transform.js'
 import { NoOpTool } from './tools/noopTool.js'
 import { LocalMouseEvent, LocalDragEvent } from './events.js'
-import { NoOpFigure } from './figures.js'
+import { NoOpFigure } from './figures/noopFigure.js'
 import { CommandStack } from './commands/commands.js'
 import { Selection} from './selection.js';
-import { Point } from './geom.js'
+import { Point } from './data/point.js'
 
 /**
  * Does: 

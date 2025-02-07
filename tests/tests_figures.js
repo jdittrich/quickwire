@@ -1,5 +1,5 @@
 import { NameFigureClassMapper } from "../NameFigureClassMapper.js";
-import { RectFigure } from "../figures.js";
+import { RectFigure } from "../figures/rectFigure.js";
 import { nameFigureClassMap } from "../nameFigureClassMap.js";
 
 const figureAbstractClass = QUnit.module('Abstract Figure Class', function(){

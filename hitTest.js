@@ -1,4 +1,5 @@
-import {Rect, Point} from "./geom.js";
+import { Rect  } from "./data/rect.js";
+import { Point } from "./data/point.js";
 
 /**
  * A predicate function that gets a Figure any other parameter and returns a boolean. E.g. check if figure contains a point
