@@ -1,45 +1,62 @@
-import {Rect, Point} from '../geom.js';
+import {Rect} from '../data/rect.js';
+import {Point} from '../data/point.js';
+
+//Note: I use .equal instead of propEqual here, since propEqual fails to work with native getters, it seems.
+
 export const test_point = QUnit.module('point', function() {
     QUnit.test('create a point', function(assert) {
         const testPoint = new Point({x:10,y:11})
-        assert.propEqual(testPoint, {x:10,y:11});
+        assert.equal(testPoint.x, 10);
+        assert.equal(testPoint.y, 11);
     });
 
     QUnit.test('add two  points', function(assert) {
         const testPoint1 = new Point({x:10,y:20});
         const testPoint2 = new Point({x:5, y:5});
         const addedPoint = testPoint1.add(testPoint2);
-        assert.propEqual(addedPoint, {x:15,y:25});
+        assert.equal(addedPoint.x, 15);
+        assert.equal(addedPoint.y, 25);
     });
 
     QUnit.test('substracts two  points', function(assert) {
         const testPoint1 = new Point({x:10,y:20});
         const testPoint2 = new Point({x:5, y:5});
         const subPoint = testPoint1.sub(testPoint2);
-        assert.propEqual(subPoint, {x:5,y:15});
+        assert.equal(subPoint.x,5)
+        assert.equal(subPoint.y,15)
     });
 
     QUnit.test('getInverse', function(assert) {
         const testPoint1 = new Point({x:10,y:-20});
         const inversePoint = testPoint1.inverse();
-        assert.propEqual(inversePoint, {x:-10,y:20});
+        assert.equal(inversePoint.x,-10)
+        assert.equal(inversePoint.y,20)
     });
 
     QUnit.test('offset From (alias sub)', function(assert) {
         const testPoint1 = new Point({x:10,y:20});
         const testPoint2 = new Point({x:5, y:5});
         const offsetToPoint = testPoint1.offsetFrom(testPoint2);
-        assert.propEqual(offsetToPoint, {x:5,y:15});
+        assert.equal(offsetToPoint.x,5)
+        assert.equal(offsetToPoint.y,15)
     });
 
     QUnit.test("offset functions: offset to", function(assert){
         const testPoint1 = new Point({x:10,y:20});
         const testPoint2 = new Point({x:5, y:5});
         const offsetFromPoint = testPoint1.offsetTo(testPoint2);
-        assert.propEqual(offsetFromPoint, {x:-5,y:-15});
-
-
+        assert.equal(offsetFromPoint.x,-5)
+        assert.equal(offsetFromPoint.y,-15)
     })
+
+    QUnit.test("serialization/deserialization to/from JSON", function(assert){
+        const testPoint1 = new Point({x:10,y:20});
+        const testJSON = testPoint1.toJSON();
+        assert.propEqual(testJSON, {x:10,y:20});
+        const testPoint2 = Point.fromJSON(testJSON);
+        assert.equal(testPoint2.x,10)
+        assert.equal(testPoint2.y,20)
+    });
 });
 
 export const test_rect = QUnit.module('rect', function() {
@@ -59,21 +76,33 @@ export const test_rect = QUnit.module('rect', function() {
     // get points
     QUnit.test('get position', function(assert) {
         const testRect = new Rect({x:10,y:11, width:12, height:13})
-        assert.propEqual(testRect.getPosition(), {x:10,y:11});
+        const position = testRect.getPosition();
+        assert.equal(position.x, 10);
+        assert.equal(position.y, 11);
     });
 
     QUnit.test('get center', function(assert) {
         const testRect = new Rect({x:10,y:20, width:40, height:20})
-        assert.propEqual(testRect.getCenter(), {x:30,y:30});
+        const center = testRect.getCenter();
+        assert.equal(center.x, 30);
+        assert.equal(center.y, 30);
     });
 
     QUnit.test('get corners', function(assert) {
         const testRect = new Rect({x:10,y:20, width:40, height:20})
         const corners = testRect.getCorners();
-        assert.propEqual(corners.topRight,    {x:50,y:20});
-        assert.propEqual(corners.bottomRight, {x:50,y:40});
-        assert.propEqual(corners.bottomLeft,  {x:10,y:40});
-        assert.propEqual(corners.topLeft,     {x:10,y:20});
+
+        assert.equal(corners.topRight.x, 50);
+        assert.equal(corners.topRight.y, 20);
+
+        assert.equal(corners.bottomRight.x, 50);
+        assert.equal(corners.bottomRight.y, 40);
+
+        assert.equal(corners.bottomLeft.x, 10);
+        assert.equal(corners.bottomLeft.y, 40);
+
+        assert.equal(corners.topLeft.x, 10);
+        assert.equal(corners.topLeft.y, 20);
     });
 
     //manipulation
