@@ -1,11 +1,13 @@
 import { SubclassShouldImplementError } from '../errors.js';
 import { Rect } from '../data/rect.js';
-import {} from './figureAttributes.js';
+import {FigureAttributes} from './figureAttributes.js';
 
 class Figure {
     #rect = null;
-    #attributes = new Map(); //store and retrive attributes
+    //#attributes = new Map(); //store and retrive attributes
     #attributeKeys = new Set(); //which attribute keys are possible on the figure. Default: Empty
+
+    #attributes = new FigureAttributes();
 
     #containedBy = null;
 
@@ -63,9 +65,6 @@ class Figure {
      * @param {String} key 
      */
     getAttribute(key){
-        if(!this.#attributeKeys.has(key)){
-            throw new Error("Tried to set attribute with an unregistered key. Register keys with registerAttribute")
-        }
         const value  = this.#attributes.get(key);
         return value; 
     }
@@ -76,34 +75,16 @@ class Figure {
      * @param {*} value 
      */
     setAttribute(key,value){
-        if(!this.#attributeKeys.has(key)){
-            throw new Error("Tried to set attribute with an unregistered key. Register keys with registerAttribute")
-        }
         this.#attributes.set(key,value);
     }
     /**
      * Registers additional allowed keys.
      * Usually called in constructor.
-     * @param {string[]} keys 
+     * @param {object}   {"Keyname":"ConstructorName"}
      */
-    registerAttribute(keys){
-        keys.forEach((key,index)=>{
-            if( typeof key !== "string"){
-                throw new TypeError("A key at index "+index+" was not of type \"string\", but of type "+typeof key)
-            }
-            this.#attributeKeys.add(key);
-        });
+    registerAttributes(keyConstructorObject){
+        this.#attributes.register(keyConstructorObject)
     };
-
-    /**
-     * Gets allowed attribute keys
-     * @returns {Array}
-     */
-    getAttributeKeys(){
-        const keysOfSet = this.#attributeKeys.keys();
-        const arrayOfKeys = Array.from(keysOfSet);
-        return arrayOfKeys;
-    }
 
     //#region: child management
     
