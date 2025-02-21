@@ -2,9 +2,7 @@ import {Figure} from "./figures/figure.js"
 
 class Selection{
     #selectedFigure = null; 
-    constructor(){
-
-    }
+    constructor(){}
 
     /**
      * gets selected figure (if existing)
@@ -42,18 +40,19 @@ class Selection{
         const isSelected = (figure === this.#selectedFigure);
         return isSelected;
     }
-    getSelectionRect(){
-        if(!this.hasSelection){throw new Error("getSelectionRect called, but no selection present")}
-        const figureRect = this.#selectedFigure.getRect();
-        return figureRect;
-    }
-    getHandles(drawingView){
-        let handles = [];
-        if(this.#selectedFigure){
-           handles = this.#selectedFigure.getHandles(drawingView); 
-        }
-        return handles; 
-    }
+
+    // getSelectionRect(){
+    //     if(!this.hasSelection){throw new Error("getSelectionRect called, but no selection present")}
+    //     const figureRect = this.#selectedFigure.getRect();
+    //     return figureRect;
+    // }
+    // getHandles(drawingView){
+    //     let handles = [];
+    //     if(this.#selectedFigure){
+    //        handles = this.#selectedFigure.getHandles(drawingView); 
+    //     }
+    //     return handles; 
+    // }
 }
 
 export {Selection};

@@ -12,15 +12,11 @@ class Figure {
     #containedBy = null;
 
     constructor(param){
-        const {x,y,width,height} = param;
-
-        this.setRect(new Rect({
-            "x":x,
-            "y":y,
-            "width":width,
-            "height":height
-        }));
-
+        const rect = param.rect
+        if(rect.constructor !== Rect){
+            throw new TypeError("param.rect needs to be a Rect instance")
+        }
+        this.setRect(rect);
         this.appendFigures(param.containedFigures||[]);
     }
     
@@ -418,9 +414,7 @@ class Figure {
      */
     getJsonOfContainedFigures(){
         const jsonOfContainedFigures = this.#containedFigures.map(figure=>figure.toJSON());
-        return {
-            "containedFigures": jsonOfContainedFigures
-        }
+        return jsonOfContainedFigures;
     }
 
     //#region serialization/deserialization

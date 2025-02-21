@@ -481,7 +481,43 @@ Handle →  → ListItemToggle,editText....
 Where a handle always has a getRect (local), getScreenRect(), draw(), getColor()
 I can still push stuff into intermediate classes if needed. 
 
-## Issues 6.2.25
-* Add a toJSON to Point
-* Add a test for toJSON on point 
-* use the point/rect class in the figure serialization
+## What of drawing views do handles, tools and commands need?
+* update drawings: Needed by handles (update previews) tools (issue commands)
+* manage previews: Tools and handles 
+* pan and scale 
+* transform point/rect between doc and screen: commands
+* change tools: tools
+* event handling: by draw itself
+* getHandles: drawing and hit testing
+
+* Commands
+    * ChangeParameterCommand: nur figure
+    * changeRectCommand: figure, hit testing
+    * createFigureCommand: getNameFigureClassMapper, clearSelection
+
+Responsibilities of drawingView
+* Tools and converters 
+    * Rect/Point transformations (needed by commands)
+    * Hit testing (needed by commands when creating new figures)
+* Display (needed by commands for updating)
+    * Trigger drawing
+* Serialization/Deserialization (this might be needed by commands like create figure, delete figure)
+    * Figure Class Mapper 
+* View User Interaction
+    * Pan, Zoom (this is not needed for commands, but its mediated via rect/point conversation)
+* Interaction with app
+
+So I guess, drawingView does:
+* Redraw management (does only trigger things, via tools)
+* setting zoom and pan (via tool)
+* Event conversion and triggering (does need to know triggers from app and zoom/pan, via app)
+* Convert or message-bus to app 
+
+Responsibilities of App
+* Hand over Events to drawing View
+* Hold Toolbars
+
+
+## Toolbar in app?
+* Hand the screen position to app
+* ShowControls?

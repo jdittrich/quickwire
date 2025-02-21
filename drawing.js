@@ -1,23 +1,25 @@
 import { Rect } from './data/rect.js';
 import { Figure } from './figures/figure.js';
-import { findFiguresBelowPoint, findEnclosingFigures, findEnclosedFigures, findFiguresEnclosingAndEnclosed} from './hitTest.js';
+import { findFiguresBelowPoint, figureWalkTreeLazy, findFiguresEnclosingAndEnclosed} from './hitTest.js';
 
 // the drawing contains other figures, so it is basically a composite figure
 class Drawing extends Figure{
     figureType = "Drawing";
     constructor(){
         super({
-            x:0,
-            y:0,
-            width:600,
-            height:600
+            "rect": new Rect({
+                x:0,
+                y:0,
+                width:600,
+                height:600
+            })
         })
        
     }
     draw(ctx){
         const {width, height} = this.getRect();
         ctx.save();
-        ctx.fillStyle = "lightgray";
+        ctx.fillStyle = "white";
         ctx.fillRect(0,0,width,height);
         ctx.restore()
         this.drawContainedFigures(ctx);
@@ -45,10 +47,11 @@ class Drawing extends Figure{
        const figuresBelowPoint = findFiguresBelowPoint(this,point,false); //…,…,false = don’t allow to select the drawing itself
        return figuresBelowPoint;
     }
+    
     deleteAllFigures(){
         const walkTreeAndDelete = (currentNode) => {
             const containedFigures = currentNode.getContainedFigures();
-            containedFigures.forEach(containedFigure => walkTree(containedFigure)); //first traverse deep
+            containedFigures.forEach(containedFigure => walkTreeAndDelete(containedFigure)); //first traverse deep
             containedFigures.forEach(containedFigure => currentNode.detachFigure(containedFigure));//after traversal is done, delete all children
         }
         walkTreeAndDelete(this);
@@ -56,7 +59,7 @@ class Drawing extends Figure{
     toJSON(){
         return{
             "type":this.figureType ,
-            ...this.getJsonOfContainedFigures()
+            "containedFigures":this.getJsonOfContainedFigures()
         }
     }
     fromJSON(JSON, nameFigureClassMapper){

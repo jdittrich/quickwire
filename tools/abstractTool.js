@@ -9,12 +9,14 @@ import {LocalDragEvent, LocalMouseEvent} from '../events.js'
  *   No need to implement all; if you do not implement them the ones from AbtractTool are called, which do nothing.
  * 
  * NOTES: 
- * - The general event order is: mousemove→ mousedown → dragStart → mousemove → drag → dragEnd → mouseup → mousemove
+ * - The general event order is: mousemove → mousedown → dragStart → mousemove → drag → dragEnd → mouseup → mousemove
  *   So the "drag" events are enclosed by the normal mouse events (down before dragStart and dragEnd before up), while dragging, mousemove comes before drag.
  * 
  * @see {DrawingView} which calls the tool methods and shows how the calling of the functions is implemented.
  */
 class AbstractTool{
+    #drawingView = null;
+
     constructor(){}
     /**
      * Internal use only. Counterpart to toolManager’s change tool; this way, 
@@ -22,9 +24,12 @@ class AbstractTool{
      * @param {DrawingView} drawingView
      * @see: DrawingView
      */
-    setDrawingView(drawingView){ 
-        this.drawingView = drawingView;
-    } 
+    // setDrawingView(drawingView){ 
+    //     this.#drawingView = drawingView;
+    // }
+    // getDrawingView(){
+    //     return this.#drawingView;
+    // }
     onKeydown(){}
     
     onKeyup(){}

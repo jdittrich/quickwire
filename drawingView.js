@@ -2,9 +2,10 @@ import { ViewTransform} from './transform.js'
 import { NoOpTool } from './tools/noopTool.js'
 import { LocalMouseEvent, LocalDragEvent } from './events.js'
 import { NoOpFigure } from './figures/noopFigure.js'
-import { CommandStack } from './commands/commands.js'
+import { CommandStack } from './commands/commandStack.js'
 import { Selection} from './selection.js';
-import { Point } from './data/point.js'
+import { Point } from './data/point.js';
+import { Rect } from "./data/rect.js";
 
 /**
  * Does: 
@@ -21,6 +22,7 @@ import { Point } from './data/point.js'
  *  zoom
  *  pan 
  */
+
 class DrawingView{
     //private properties used in constructor
     #ctx          = null; 
@@ -29,13 +31,8 @@ class DrawingView{
     #commandStack = null;
     #selection    = null; 
     #nameFigureClassMapper = null; 
+    #requestEditorText  = null;
 
-    /**
-     * 
-     * @param {RenderingContext2D } ctx 
-     * @param {Drawing} drawing 
-     * @param {Point} size
-     */
 
     /**
      * 
@@ -44,6 +41,7 @@ class DrawingView{
      * @param {Drawing}               param.drawing
      * @param {point}                 param.ctxSize 
      * @param {NameFigureClassMapper} param.nameFigureClassMapper
+     * @param {Function}              param.requestEditorText
      */
     constructor(param){
         const {ctx,drawing,ctxSize,nameFigureClassMapper} = param
@@ -53,12 +51,12 @@ class DrawingView{
         this.setCtxSize(ctxSize);//needed to know which area to clear on redraws
         this.#ctx = ctx;
         this.drawing = drawing;
-        
+
+        this.#requestEditorText = param.requestEditorText;
         this.#nameFigureClassMapper = nameFigureClassMapper;
         this.#commandStack = new CommandStack();
         this.#selection = new Selection();
         this.changeTool(new NoOpTool())
-        
 
         //first draw
         this.#drawAll()
@@ -77,14 +75,20 @@ class DrawingView{
         this.#drawPreviews();
     }
     #drawDrawing(){
-        this.#ctx.setTransform(...this.#transform.toArray()); //zoom and pan
-        this.drawing.draw(this.#ctx)
-        this.#ctx.resetTransform(); //so the next one can deal with an untransformed canvas.
+        const ctx = this.#ctx;
+        ctx.setTransform(...this.#transform.toArray()); //zoom and pan
+        this.drawing.draw(ctx);
+        ctx.resetTransform(); //so the next one can deal with an untransformed canvas.
     }
     #drawHandles(){
+        const ctx = this.#ctx;
         if(this.#dragging){return} //hides handles during dragging, as currently handle positions are not updated during drag
         const handles = this.getHandles();
-        handles.forEach(handle=> handle.draw(this.#ctx));
+        handles.forEach((handle)=> {
+            ctx.save();
+            handle.draw(ctx);
+            ctx.restore();
+        });
     }
 
     //#region: previews
@@ -176,6 +180,36 @@ class DrawingView{
         return pointOnScreen;
     }
 
+    /**
+     * Helper to transform a rect, defined in screen coordinates 
+     * to transformed document coordinates.
+     * 
+     * @param   {Rect} screenRect 
+     * @returns {Rect} 
+     */
+    screenToDocumentRect(screenRect){
+        const {topLeft,bottomRight} = screenRect.getCorners();
+        const documentTopLeft     = this.screenToDocumentPosition(topLeft);
+        const documentBottomRight = this.screenToDocumentPosition(bottomRight);
+        const documentRect = Rect.createFromCornerPoints(documentTopLeft, documentBottomRight);
+        return documentRect;    
+    }   
+    /**
+     * Helper to transform a rect, defined in document coordinates 
+     * to untransformed screen coordinates.
+     * 
+     * @param   {Rect} documentRect 
+     * @returns {Rect} 
+     */
+    documentToScreenRect(documentRect){
+        const {topLeft,bottomRight} = documentRect.getCorners();
+        const screenTopLeft     = this.documentToScreenPosition(topLeft);
+        const screenBottomRight = this.documentToScreenPosition(bottomRight);
+        const screenRect = Rect.createFromCornerPoints(screenTopLeft, screenBottomRight);
+        return screenRect;    
+    }
+
+
     //#region: tool management
     #tool = null; 
 
@@ -183,7 +217,8 @@ class DrawingView{
      * @param {AbstractTool} any tool to change to.
     */
     changeTool(tool){
-        tool.setDrawingView(this)  
+        //event: change tool
+        //tool.setDrawingView(this)  
         this.#tool = tool;
     }
 
@@ -194,7 +229,9 @@ class DrawingView{
     getTool(){
         return this.#tool;
     }
-    
+
+
+
     //#region: events
     #mouseDownPoint = null;
     #dragging = false; 
@@ -333,12 +370,14 @@ class DrawingView{
        figure.remove();
     }
 
+    //#region: commands
     /**
      * execute a new command and put it on stack for undoable actions
      * @param {Command} command 
      */
     do(command){
-        this.#commandStack.do(command)
+        this.#commandStack.do(command);
+        this.updateDrawing();
     }
 
     /**
@@ -384,6 +423,7 @@ class DrawingView{
         return selection;
     }
     
+    //#region: handles
     /**
      * @returns {Handle[]} array with 0 or more handles
      */
@@ -395,7 +435,20 @@ class DrawingView{
         }   
         return handles;
     }
+    //#region: request native userInterface
+    
+    /**
+     * @param   {String} message - message shown to users
+     * @param   {String} prefillText 
+     * @returns {String}
+     * @throws if editing is canceled by user.
+     */
+    requestEditorText(message,prefillText){
+        const text = this.#requestEditorText(message,prefillText);
+        return text;
+    }
 
+    //#region: serialization/deserialization
     getNameFigureClassMapper(){
         return this.#nameFigureClassMapper;
     }

@@ -152,4 +152,16 @@ export const test_rect = QUnit.module('rect', function() {
         assert.false(rect1.enclosesRect(rect4_partial), "rect 1 does not enclose 4 (but intersects)");
         assert.false(rect1.enclosesRect(rect5_outside), "rect 1 does not enclode 4 (no intersection)");
     });
+
+    QUnit.test('serialization deserialization', function(assert){
+        const rect = new Rect({x:10,y:20, width:40, height:50});
+        const rectJsonString = JSON.stringify(rect);
+        const rectJson = JSON.parse(rectJsonString);
+        assert.propEqual(rectJson, {x:10,y:20, width:40, height:50},"Json was stringified and correctly parsed");
+        const revivedRect = Rect.fromJSON(rectJson);
+        assert.equal(revivedRect.x,10);
+        assert.equal(revivedRect.y,20);
+        assert.equal(revivedRect.width,40);
+        assert.equal(revivedRect.height,50);
+    })
 });

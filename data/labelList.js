@@ -5,7 +5,7 @@
  * A list of Labels
  */
 class LabelList{
-    #labels = null;
+    #labels = [];
     
     //creation
     constructor(arrayOfLabels){

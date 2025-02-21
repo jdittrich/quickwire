@@ -1,6 +1,7 @@
 import { createAllResizeHandles } from '../handles/resizeHandle.js';
 
 import {Figure} from './figure.js'
+import { Rect } from '../data/rect.js';
 
 /**
  * Creates figure representing a simple rectangle
@@ -41,37 +42,41 @@ class RectFigure extends Figure{
     }
     
     toJSON(){
-        const rectJson = this.getJsonOfRect()
         const containedFiguresJson = this.getJsonOfContainedFigures();
         const rectFigureJson =  {
             "type":this.figureType,
-            ...rectJson,
-            ...containedFiguresJson
+            "rect":this.getRect().toJSON(),
+            "containedFigures":containedFiguresJson
         }
-        /**
-         * "type":this.figureType,
-         * "rect":this.getRect().toJson();
-         * "containedFigures":...
-         * 
-         */
         return rectFigureJson;
     }
 
     /**
      * created a figure from a JSON
-     * @param {JSON} JSON 
+     * @param {JSON} figureJson 
      */
-    static fromJSON(JSON,nameFigureClassMapper){
-        const {x,y,width,height} = JSON;
-        const containedFigureObjects = super.createContainedFiguresFromJson(JSON,nameFigureClassMapper);
+    static fromJSON(figureJson,nameFigureClassMapper){
+        const containedFigureObjects = super.createContainedFiguresFromJson(figureJson,nameFigureClassMapper);
         const rectFigure = new RectFigure({
-            "x":                x,
-            "y":                y,
-            "width":            width,
-            "height":           height,
+            "rect": Rect.fromJSON(figureJson.rect),
             "containedFigures": containedFigureObjects
          });
          return rectFigure;
+    }
+
+    /**
+     * @returns {RectFigure}
+     */
+    static createWithDefaultParameters(){
+        const rectFigure = new RectFigure({
+            rect: new Rect({
+                "x":0,
+                "y":0,
+                "width":100,
+                "height":50
+            })
+        });
+        return rectFigure;
     }
 }
 

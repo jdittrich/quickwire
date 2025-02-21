@@ -1,24 +1,26 @@
 import {AbstractTool} from './abstractTool.js';
 import {LocalDragEvent, LocalMouseEvent} from '../events.js';
-import {MoveFigureCommand} from '../commands/commands.js';
+import {MoveFigureCommand} from '../commands/ChangeRectCommand.js';
+
+
 
 class SelectionTool extends AbstractTool{
     #childTool = null
     constructor(){
         super();
     }
+
+    /**
+     * 
+     * @param {LocalMouseEvent} event 
+     */
     onMousedown(event){
         //are we over a figure?
         const currentPositionDocument = event.getDocumentPosition();
+        const figuresEnclosingPoint = event.drawingView.drawing.findFiguresEnclosingPoint(currentPositionDocument);
         
-        const figuresEnclosingPoint = this.drawingView.drawing.findFiguresEnclosingPoint(currentPositionDocument);
-        
-        //TODO:  if we want double-clickable text, we need some mechanism to trigger that.
-        // maybe it is something like a sub-element that is drawable (but not another figure)
-        // and knows its own rectangle, as derived from the figure it is in?
-
         //get handles from an already selected figure.
-        const handles = this.drawingView.getHandles();
+        const handles = event.drawingView.getHandles();
         const handleUnderPoint = handles.find(handle=> handle.enclosesPoint(currentPositionDocument))
         
         if(handleUnderPoint){
@@ -26,12 +28,12 @@ class SelectionTool extends AbstractTool{
             this.#childTool = new HandleTracker(handleUnderPoint);
         } else if (figuresEnclosingPoint.length === 0){//no figures under mouse
             //if we are not over a figure, unselect and go to pan mode
-            this.drawingView.clearSelection();
+            event.drawingView.clearSelection();
             this.#childTool = new PanTracker();
         } else if(figuresEnclosingPoint.length > 0){ //at least one figure under mouse
             //if we are over a figure, select and go do drag mode
             const innermostFigure = figuresEnclosingPoint[0];
-            this.drawingView.select(innermostFigure);
+            event.drawingView.select(innermostFigure);
             this.#childTool = new DragTracker(innermostFigure);
         } else {
             throw new Error("one of the above conditions should always be the case");
@@ -40,7 +42,13 @@ class SelectionTool extends AbstractTool{
         this.#childTool.onMousedown(event);
     }
     onMousemove(event){
-        //this.#childTool.onMousemove(event);
+        // check if you are dragging. If yes, do nothing.
+        // Check what you are over
+        // elementYouAreOver.getRect()
+        // drawRectOnTop();
+        
+        // use https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas#pre-render_similar_primitives_or_repeating_objects_on_an_offscreen_canvas
+        
     }
     onDragstart(event){
         this.#childTool.onDragstart(event);
@@ -57,7 +65,7 @@ class SelectionTool extends AbstractTool{
     onWheel(event,wheelDelta){
         const changeFactor = (wheelDelta>0) ? 0.8:1.2; 
         const screenPosition = event.getScreenPosition()
-        this.drawingView.scaleBy(changeFactor,screenPosition);
+        event.drawingView.scaleBy(changeFactor,screenPosition);
     }
 }
 

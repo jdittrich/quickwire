@@ -175,6 +175,16 @@ class Rect{
         }
     }
 
+    static fromJSON(rectJson){
+        const {x,y,width,height} = rectJson;
+        const rect = new Rect({
+            "x":      x,
+            "y":      y,
+            "width":  width,
+            "height": height,
+        })
+        return rect; 
+    }
     /**
      * 
      * @param {Point} point1 

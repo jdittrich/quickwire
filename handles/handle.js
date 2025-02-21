@@ -17,9 +17,13 @@ class Handle{
         throw new SubclassShouldImplementError("getLocation", "Handle");
     }
 
+    /**
+     * @returns {DrawingView}
+     */
     getDrawingView(){
         return this.#drawingView;
     }
+
     /**
      * Get the figure to which the handle belongs
      * @returns {Figure}
@@ -28,7 +32,7 @@ class Handle{
         return this.#figure;
     }
     
-    getScreenRect(){ //TODO: Move to resizeHandle
+    getScreenRect(){
         throw new SubclassShouldImplementError("getScreenRect", "Handle");
     }
     /**
@@ -79,7 +83,7 @@ class Handle{
     onDrag(dragEvent){ }
     onDragend(dragEvent){ }
     onMousedown(mouseEvent){ }
-    onMouseUp(mouseEvent){ }
+    onMouseup(mouseEvent){ }
 }
 
 export {Handle}

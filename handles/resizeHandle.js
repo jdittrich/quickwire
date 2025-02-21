@@ -1,6 +1,6 @@
 import { Rect } from "../data/rect.js";
 import { Handle } from "./handle.js";
-import { ChangeFigureRectCommand } from "../commands/commands.js";
+import { ChangeFigureRectCommand } from "../commands/ChangeRectCommand.js";
 
 
 class ResizeHandle extends Handle{

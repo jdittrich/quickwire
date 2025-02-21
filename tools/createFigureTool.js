@@ -1,29 +1,26 @@
 import { AbstractTool } from "./abstractTool.js";
-import { CreateFigureCommand } from "../commands/commands.js";
+import { CreateFigureCommand } from "../commands/CreateFigureCommand.js";
+import { SelectionTool } from "./selectionTool.js";
 
 //Adds an element to the drawing
-//TODO: 
-// - Add the element via command. 
 class CreateFigureTool extends AbstractTool{
     #figureToCreate = null;
-    #previewFigure = null;
+
     /**
      * @param {AbstractFigure} figure - that is to be created in the drawing
      */
     constructor(figureToCreate){
         super();
-        const frozenFigure = Object.freeze(figureToCreate);
+        const frozenFigure = Object.freeze(figureToCreate); //so we don't accidentally mess with the figure. 
         this.#figureToCreate = frozenFigure;
     }
     /**
      * 
-     * @param {LocalMouseEvent} event 
+     * @param {LocalMouseEvent} event
      * @param {Point} mouseDownPoint 
      */
     onDragstart(event,mouseDownPoint){
-        //WIP
-        //create the element, size is 
-        this.drawingView.startPreviewOf(this.#figureToCreate);
+        event.drawingView.startPreviewOf(this.#figureToCreate);
     }
     /**
      * @param {LocalDragEvent} event 
@@ -31,9 +28,9 @@ class CreateFigureTool extends AbstractTool{
     onDrag(event){ 
         const currentMousePoint = event.getDocumentPosition(); 
         const documentMouseDownPoint = event.getMousedownDocumentPosition();
-        const previewedFigure = this.drawingView.getPreviewedFigure();
+        const previewedFigure = event.drawingView.getPreviewedFigure();
         previewedFigure.setRectByPoints(documentMouseDownPoint,currentMousePoint);
-        this.drawingView.updateDrawing();
+        event.drawingView.updateDrawing();
     }
     /**
      * 
@@ -50,14 +47,14 @@ class CreateFigureTool extends AbstractTool{
                 "cornerPoint1":       documentMousePoint,
                 "cornerPoint2":       documentMouseDownPoint,
             },
-            this.drawingView
+            event.drawingView
         );
         //do the thing
-        this.drawingView.do(createFigureCommand);
+        event.drawingView.do(createFigureCommand);
         
         //cleanup
-        this.#previewFigure = null;
-        this.drawingView.endPreview();
+        event.drawingView.endPreview();
+        event.drawingView.changeTool(new SelectionTool());
     }
 }
 

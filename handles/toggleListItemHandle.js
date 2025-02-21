@@ -1,22 +1,7 @@
-import { ChangeAttributeCommand } from "../commands/ChangeAttributeCommand.js";
-import { Rect }   from "../data/rect.js";
+import { ChangeAttributeCommand } from "../commands/changeAttributeCommand.js";
 import { Handle } from "./handle.js";
 
-/**
- * Helper to transform a rect, defined in document coordinates 
- * to untransformed screen coordinates.
- * 
- * @param   {Rect} documentRect 
- * @param   {DrawingView} drawingView
- * @returns {Rect} 
- */
-function documentToScreenRect(documentRect,drawingView){
-    const {topLeft,bottomRight} = documentRect.getCorners();
-    const screenTopLeft     = drawingView.documentToScreenPosition(topLeft);
-    const screenBottomRight = drawingView.documentToScreenPosition(bottomRight);
-    const screenRect = Rect.createFromCornerPoints(screenTopLeft, screenBottomRight);
-    return screenRect; 
-}
+
 
 class ToggleListItemHandle extends Handle{
     #listItemRect
@@ -37,15 +22,21 @@ class ToggleListItemHandle extends Handle{
         ctx.restore();
     }
     getScreenRect(){
-        const screenRect = documentToScreenRect(this.#listItemRect,this.getDrawingView())
+        const drawingView = this.getDrawingView();
+        const screenRect = drawingView.documentToScreenRect(this.#listItemRect);
         return screenRect;  
     }
     onMousedown(mouseEvent){
+        const figure = this.getFigure()
+        const oldSingleSelectList = figure.getAttribute("radioButtons");
+        const newSelectedIndex = this.#listItemIndex;
+        const newSingleSelectList = oldSingleSelectList.copy({"selectedIndex":newSelectedIndex});
+        
         const changeSelectedIndexCommand = new ChangeAttributeCommand(
             {
                 figure:this.getFigure(),
-                attribute:"indexOfSelectedLabel",
-                value:this.#listItemIndex
+                attribute:"radioButtons", 
+                value:newSingleSelectList 
             },
             this.drawingView
         )

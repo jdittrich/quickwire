@@ -1,4 +1,4 @@
-import { Command } from "./commands.js"
+import { Command } from "./command.js"
 
 class ChangeAttributeCommand extends Command{
     #newAttributeValue 
@@ -13,9 +13,9 @@ class ChangeAttributeCommand extends Command{
      * 
      * @param {DrawingView} drawingView 
      */
-    constructor(params,drawingView){
+    constructor(param,drawingView){
         super();
-        const {figure,attribute,value} = params;
+        const {figure,attribute,value} = param;
         this.#newAttributeValue = value;
         this.#oldAttributeValue = figure.getAttribute(attribute);
         this.#AttributeKey = attribute;

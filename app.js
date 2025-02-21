@@ -1,10 +1,11 @@
-import { Drawing } from "./drawing.js"
-import { DrawingView } from "./drawingView.js"
-import { Point } from "./data/point.js"
+import { Drawing } from "./drawing.js";
+import { DrawingView } from "./drawingView.js";
+import { Point } from "./data/point.js";
+import { Rect } from "./data/rect.js";
 
-import { RectFigure } from "./figures/rectFigure.js"
-import { ButtonFigure } from "./figures/buttonFigure.js"
-import { RadioButtonListFigure } from "./figures/radioButtonListFigure.js"
+import { RectFigure } from "./figures/rectFigure.js";
+import { ButtonFigure } from "./figures/buttonFigure.js";
+import { RadioButtonListFigure } from "./figures/radioButtonListFigure.js";
 
 import { SelectionTool } from "./tools/selectionTool.js";
 import { NoOpTool } from "./tools/noopTool.js";
@@ -15,9 +16,11 @@ import { Toolbar, ToolbarToolButton, ToolbarActionButton, ToolbarLoadFileAsJsonB
 
 class App{
     #canvas
+    #canvasCtx
     #domContainer
     #drawing
     #drawingView
+
     /**
      * 
      * @param {HTMLElement} container 
@@ -26,6 +29,7 @@ class App{
         //setup DOM
         this.#domContainer = domContainer;
         this.#canvas = document.createElement("canvas");
+        this.#canvasCtx =  this.#canvas.getContext("2d"),
         
         this.#canvas.addEventListener("mousedown", this.#onMousedown.bind(this));
         this.#canvas.addEventListener("mouseup"  , this.#onMouseup.bind(this));
@@ -37,6 +41,18 @@ class App{
         this.#canvas.addEventListener("keyup", this.#keyup.bind(this));
         
         this.#domContainer.append(this.#canvas);
+
+        //setup canvas scaling for high dpi screens
+        //see: https://www.kirupa.com/canvas/canvas_high_dpi_retina.htm
+        //needs also a mouse position shift by *devicePixelRatio, see .getLocalEventPosition()
+        const canvasRect = this.#canvas.getBoundingClientRect();
+        this.#canvas.width = canvasRect.width * devicePixelRatio;
+        this.#canvas.height = canvasRect.height * devicePixelRatio;
+        //this.#canvasCtx.scale(devicePixelRatio, devicePixelRatio);
+        this.#canvas.style.width = canvasRect.width+"px";
+        this.#canvas.style.height = canvasRect.height+"px";
+        this.#canvas.style.background = "lightgray";
+        
         
         //setup figureName to Class mapping
         
@@ -47,31 +63,42 @@ class App{
         this.#drawing = new Drawing();
         this.#drawingView = new DrawingView(
             {
-                "ctx":this.#canvas.getContext("2d"),
+                "ctx": this.#canvasCtx,
                 "ctxSize": new Point({
-                    x:this.#canvas.width,
-                    y:this.#canvas.height
+                    x: this.#canvas.width,
+                    y: this.#canvas.height
                 }),
-                "drawing":this.#drawing,
-                "nameFigureClassMapper":nameFigureClassMapper
+                "drawing": this.#drawing,
+                "nameFigureClassMapper": nameFigureClassMapper,
+                "requestEditorText":function(message,prefillText){
+                    const editedText = window.prompt(message,prefillText);
+
+                    if(editedText===null){
+                        throw new Error("Editing cancelled");
+                    };
+                    
+                    return editedText;
+                } 
             }
         );
 
-        this.#drawingView.changeTool(new SelectionTool())
+        //tool definitions
+
+        this.#drawingView.changeTool(new SelectionTool());
 
         this.toolbar = new Toolbar(this.#drawingView);
         this.#domContainer.append(this.toolbar.domElement);
         
         this.toolbar.addTool("selection", new SelectionTool(), "select, drag or change handles");
-        this.toolbar.addTool("noop", new NoOpTool(), "this tool does nothing");
+        //this.toolbar.addTool("noop", new NoOpTool(), "this tool does nothing");
         
-        const rectFigureTemplate = new RectFigure({"x":0,"y":0,"width":10,"height":10});
+        const rectFigureTemplate =  RectFigure.createWithDefaultParameters();
         this.toolbar.addTool("newRect", new CreateFigureTool(rectFigureTemplate),"simple rectangle");
         
-        const buttonFigureTemplate = new ButtonFigure({"x":0,"y":0,"width":10,"height":10,"label":"OK"});
+        const buttonFigureTemplate = ButtonFigure.createWithDefaultParameters();
         this.toolbar.addTool("new Button", new CreateFigureTool(buttonFigureTemplate), "a button");
 
-        const experimentFigureFigureTemplate = new RadioButtonListFigure({"x":0,"y":0,"width":10,"height":10});
+        const experimentFigureFigureTemplate = RadioButtonListFigure.createWithDefaultParameters();
         this.toolbar.addTool("new Radio", new CreateFigureTool(experimentFigureFigureTemplate), "RadioButtonList");
         
         this.toolbar.addAction("undo",function(drawingView){drawingView.undo()}, "undo last action");
@@ -107,6 +134,7 @@ class App{
         window.drawing = this.#drawing;
     }
 
+    //#region: event handler
     #onMousedown(e){
         let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
         this.#drawingView.onMousedown(eventPosRelativeToCanvas);
@@ -137,6 +165,7 @@ class App{
 
     }
 
+    //#region: Event offsets
     /**
      * get the offset of canvas-position to the client’s origin coordinates
      * 
@@ -156,37 +185,13 @@ class App{
     getLocalEventPosition(mouseEvent){
         const canvasOffset = this.getCanvasOffset();
         const eventPosition = new Point({
-            "x":mouseEvent.clientX,
-            "y":mouseEvent.clientY
+            "x":mouseEvent.clientX*devicePixelRatio, //see constructor for device pixel ratio adjustments
+            "y":mouseEvent.clientY*devicePixelRatio
         });
 
         const localPosition = canvasOffset.offsetTo(eventPosition);
         return localPosition;
     }
-}
-
-// a little in-line text editor to change lables
-class AppTextEditor{
-    domElement = null; 
-
-    #domInputField = null; 
-    #domOkButton = null; 
-    #domCancelButton = null; 
-
-    #figure = null;
-
-    constructor(){
-
-    }
-    removeEditor(){
-
-    }
-    commitChange(){
-
-    }
-    cancelChange(){
-
-    }
-}
+};
 
 export {App};

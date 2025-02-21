@@ -20,11 +20,16 @@ class RadioButtonListFigure extends Figure{
     figureType = "RadioButtonListFigure";
     #listEntriesRects = [];  //document rects of single list entries
 
+    /**
+     * @param {object} param
+     * @param {Rect} param.rect
+     * @param {SingleSelectableLabelList} param.radioButtons
+     */
     constructor(param){
         super(param);
-        this.registerAttribute(["labelList","indexOfSelectedLabel"]);
-        this.setAttribute("labelList",["First","Second","Third"]);
-        this.setAttribute("indexOfSelectedLabel",2);
+        const radioButtons = param.radioButtons;
+        this.registerAttributes({"radioButtons":SingleSelectableLabelList});
+        this.setAttribute("radioButtons",radioButtons);
     }
 
     //FIXME: number of parameters is ugly. Parameter object or split into functions.
@@ -92,9 +97,12 @@ class RadioButtonListFigure extends Figure{
             "y":y
         });
         const listItemHeight = 20;
-        const labelList = this.getAttribute("labelList");
+        const radioButtons = this.getAttribute("radioButtons");
+        const labelList = radioButtons.getLabels();
+        const selectedIndex = radioButtons.getSelectedIndex();
+
         labelList.forEach((entry,index)=>{
-            const selected = (index === this.getAttribute("indexOfSelectedLabel"));
+            const selected = (index === selectedIndex);
             const currentRect = this.#drawRadioButton(ctx,startPos,selected,entry,listItemHeight)
             this.#listEntriesRects.push(currentRect);
             startPos = startPos.add(
@@ -126,34 +134,52 @@ class RadioButtonListFigure extends Figure{
        const type = this.constructor.name;
        const rectFigureString = `x:${x}, y:${y}, width:${width}, height:${height}, number of contained figures:${containedFigures.length},type:${type}`;
        return rectFigureString;
+       
     }
     
+
     toJSON(){
-        const rectJson = this.getJsonOfRect()
+        const rectJson = this.getRect().toJSON();
         const containedFiguresJson = this.getJsonOfContainedFigures();
         const rectFigureJson =  {
-            "type":this.figureType,
-            ...rectJson,
-            ...containedFiguresJson
+            "type": this.figureType,
+            "rect": rectJson,
+            "containedFigures":containedFiguresJson,
+            "radioButtons":this.getAttribute("radioButtons").toJSON()
         }
         return rectFigureJson;
     }
 
     /**
      * created a figure from a JSON
-     * @param {JSON} JSON 
+     * @param {JSON} figureJson 
      */
-    static fromJSON(JSON,nameFigureClassMapper){
-        const {x,y,width,height} = JSON;
-        const containedFigureObjects = super.createContainedFiguresFromJson(JSON,nameFigureClassMapper);
+    static fromJSON(figureJson,nameFigureClassMapper){
+        const containedFigureObjects = super.createContainedFiguresFromJson(figureJson,nameFigureClassMapper);
+        
         const radioButtonListFigure = new RadioButtonListFigure({
-            "x":                x,
-            "y":                y,
-            "width":            width,
-            "height":           height,
-            "containedFigures": containedFigureObjects
+            "rect":Rect.fromJSON(figureJson.rect),
+            "containedFigures": containedFigureObjects,
+            "radioButtons":SingleSelectableLabelList.fromJSON(figureJson.radioButtons)
          });
+
          return radioButtonListFigure;
+    }
+
+    /**
+     * @returns {RadioButtonListFigure}
+     */
+    static createWithDefaultParameters(){
+        const radioButtonListFigure = new RadioButtonListFigure({
+            rect: new Rect({
+                "x":0,
+                "y":0,
+                "width":100,
+                "height":50
+            }),
+            "radioButtons": new SingleSelectableLabelList(["one","two","three", "four", "five"],0)
+            });
+        return radioButtonListFigure;
     }
 }
 
