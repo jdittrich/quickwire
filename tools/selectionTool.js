@@ -1,6 +1,6 @@
 import {AbstractTool} from './abstractTool.js';
 import {LocalDragEvent, LocalMouseEvent} from '../events.js';
-import {MoveFigureCommand} from '../commands/ChangeRectCommand.js';
+import {ChangeFigureRectCommand, MoveFigureCommand} from '../commands/changeRectCommand.js';
 
 
 
@@ -21,7 +21,7 @@ class SelectionTool extends AbstractTool{
         
         //get handles from an already selected figure.
         const handles = event.drawingView.getHandles();
-        const handleUnderPoint = handles.find(handle=> handle.enclosesPoint(currentPositionDocument))
+        const handleUnderPoint = handles.find(handle=> handle.enclosesPoint(currentPositionDocument));
         
         if(handleUnderPoint){
             //if we are over a handle,  keep selection, change handle
@@ -42,13 +42,9 @@ class SelectionTool extends AbstractTool{
         this.#childTool.onMousedown(event);
     }
     onMousemove(event){
-        // check if you are dragging. If yes, do nothing.
-        // Check what you are over
-        // elementYouAreOver.getRect()
-        // drawRectOnTop();
-        
-        // use https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas#pre-render_similar_primitives_or_repeating_objects_on_an_offscreen_canvas
-        
+       /**
+        * drawingView.highlight([thing(s)]);
+        */
     }
     onDragstart(event){
         this.#childTool.onDragstart(event);
@@ -113,6 +109,19 @@ class DragTracker extends AbstractTool{
             "moveBy": moveBy,
             "figure": this.#figureToDrag
         }, drawingView);
+
+        /**
+         * inline this:        
+        
+        const oldRect = figure.getRect();
+        const changedRect = oldRect.movedCopy(moveBy);
+
+        const changeRectParam = {
+            "changedRect":changedRect,
+            "figure":figure
+        }
+         */
+
         drawingView.do(moveCommand);
         drawingView.updateDrawing();
     }
