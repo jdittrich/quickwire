@@ -2,9 +2,8 @@ class Toolbar{
     domElement = null; 
 
     constructor(drawingView){
-        console.log("toolbar initialized")
         this.domElement = document.createElement("div");
-        this.domElement.className = "qwToolbar"
+        this.domElement.className = "qwToolbar";      
         this.drawingView = drawingView;
     }
     addTool(label, tool, tooltip){

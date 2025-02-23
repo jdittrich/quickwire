@@ -42,28 +42,25 @@ class App{
         this.#appContainer = document.createElement("div");
         this.#appContainer.style.margin  = "0";
         this.#appContainer.style.padding  = "0";
-        this.#appContainer.style.display = "grid";
         this.#appContainer.style.width   = "100%";
-        this.#appContainer.style.height  = "100%";
-        this.#appContainer.style.boxSizing ="border-box"
-        this.#appContainer.style.gridTemplateColumns = "32px auto";
-        this.#appContainer.style.gridTemplateRows    = "auto 32px";
-        this.#appContainer.style.gridTemplateAreas = '"verticalbar document" "horizontalbar horizontalbar"'
+        this.#appContainer.style.height  = "600px";
         this.#domContainer.append(this.#appContainer);
-        
-        this.#canvasContainer = document.createElement("div");
-        this.#canvasContainer.style.margin = 0;
-        this.#canvasContainer.style.padding = 0;
-        this.#canvasContainer.style.boxSizing ="border-box";
-        this.#canvasContainer.style.gridArea = "document";
-        this.#appContainer.append(this.#canvasContainer);
         
         this.#horizontalBarContainer = document.createElement("div");
         this.#horizontalBarContainer.style.margin = 0;
         this.#horizontalBarContainer.style.padding = 0;
-        this.#horizontalBarContainer.style.gridArea = "horizontalbar";
-        this.#horizontalBarContainer.style.boxSizing = "border-box";
+        this.#horizontalBarContainer.style.boxSizing;
+        this.#horizontalBarContainer.style.width = "100%";
         this.#appContainer.append(this.#horizontalBarContainer);
+
+        this.#canvasContainer = document.createElement("div");
+        this.#canvasContainer.style.margin = 0;
+        this.#canvasContainer.style.padding = 0;
+        this.#canvasContainer.style.boxSizing ="border-box";
+        this.#canvasContainer.style.width   = "100%";
+        this.#canvasContainer.style.height = "auto";
+        this.#appContainer.append(this.#canvasContainer);
+        
         
         //create canvas
         this.#canvas               = document.createElement("canvas");
@@ -81,19 +78,11 @@ class App{
         this.#canvas.addEventListener("keydown",   this.#keydown.bind(this));
         this.#canvas.addEventListener("keyup",     this.#keyup.bind(this));
         
-
-        //setup canvas scaling for high dpi screens
-
-        // const canvasRect              = this.#canvasContainer.getBoundingClientRect(); // const canvasRect              = this.#canvasContainer.getBoundingClientRect(); 
-        // this.#canvas.width            = canvasRect.width  * devicePixelRatio;
-        // this.#canvas.height           = canvasRect.height * devicePixelRatio;
-        // this.#canvas.style.width      = canvasRect.width+"px";
-        // this.#canvas.style.height     = canvasRect.height+"px";
         this.#canvas.style.background = "lightgray";
         
         window.addEventListener("resize",this.#setCanvasSize.bind(this));
 
-        this.#setCanvasSize();
+        
         
         //setup figureName to Class mapping
         const nameFigureClassMapper = new NameFigureClassMapper();
@@ -120,6 +109,47 @@ class App{
             }
         );
 
+        this.#setCanvasSize();
+
+        this.#setupToolbar();
+        
+        
+        //for debugging
+        window.drawingView = this.#drawingView;
+        window.drawing = this.#drawing;
+    }
+
+    //#region: event handler
+    #onMousedown(e){
+        let eventPosRelativeToCanvas = this.#getLocalEventPosition(e);
+        this.#drawingView.onMousedown(eventPosRelativeToCanvas);
+    }
+    #onMouseup(e){
+        let eventPosRelativeToCanvas = this.#getLocalEventPosition(e);
+        this.#drawingView.onMouseup(eventPosRelativeToCanvas);
+    }
+    #onMousemove(e){
+        let eventPosRelativeToCanvas = this.#getLocalEventPosition(e);
+        this.#drawingView.onMousemove(eventPosRelativeToCanvas);
+    }
+    
+    #onWheel(e){
+       e.preventDefault();//otherwise everything browser-zooms in addition!
+
+       let eventPosRelativeToCanvas = this.#getLocalEventPosition(e);
+        
+       //Normalize to +1 (wheel moved to user), -1 (wheel moved from user) 
+       let wheelDelta = e.wheelDeltaY > 0 ? -1:1;   
+       this.#drawingView.onWheel(eventPosRelativeToCanvas, wheelDelta)
+    }
+
+    #keydown(e){
+
+    }
+    #keyup(e){
+
+    }
+    #setupToolbar(){
         //tool definitions
         this.#drawingView.changeTool(new SelectionTool());
 
@@ -165,43 +195,7 @@ class App{
         this.toolbar.addLoadFile("load",function(drawingView, drawingJson){
             drawingView.fromJSON(drawingJson);
         }, "create a wireframe from a json file");
-        
-        //for debugging
-        window.drawingView = this.#drawingView;
-        window.drawing = this.#drawing;
     }
-
-    //#region: event handler
-    #onMousedown(e){
-        let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
-        this.#drawingView.onMousedown(eventPosRelativeToCanvas);
-    }
-    #onMouseup(e){
-        let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
-        this.#drawingView.onMouseup(eventPosRelativeToCanvas);
-    }
-    #onMousemove(e){
-        let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
-        this.#drawingView.onMousemove(eventPosRelativeToCanvas);
-    }
-    
-    #onWheel(e){
-       e.preventDefault();//otherwise everything browser-zooms in addition!
-
-       let eventPosRelativeToCanvas = this.getLocalEventPosition(e);
-        
-       //Normalize to -1 (wheel moved to user), +1 (wheel moved from user) 
-       let wheelDelta = e.wheelDeltaY > 0 ? 1:-1;   
-       this.#drawingView.onWheel(eventPosRelativeToCanvas, wheelDelta)
-    }
-
-    #keydown(e){
-
-    }
-    #keyup(e){
-
-    }
-
     /**
      * sets canvas size in relation to its outer container and the devicePixelRatio
      * see: https://www.kirupa.com/canvas/canvas_high_dpi_retina.htm
@@ -215,6 +209,10 @@ class App{
         canvas.height           = canvasRect.height * devicePixelRatio;
         canvas.style.width      = canvasRect.width+"px";
         canvas.style.height     = canvasRect.height+"px";
+        this.#drawingView.setCtxSize(new Point({
+            x:canvas.width,
+            y:canvas.height
+        }))
     }
 
     //#region: Event offsets
@@ -223,7 +221,7 @@ class App{
      * 
      * return {Point}
      */
-    getCanvasOffset(){
+    #getCanvasOffset(){
         const canvasRelativeToClient = this.#canvas.getBoundingClientRect();
 
         const offset = new Point({
@@ -238,8 +236,8 @@ class App{
      * @param {MouseEvent} mouseEvent 
      * @returns {Point}
      */
-    getLocalEventPosition(mouseEvent){
-        const canvasOffset = this.getCanvasOffset();
+    #getLocalEventPosition(mouseEvent){
+        const canvasOffset = this.#getCanvasOffset();
         const clientEventPos = new Point({
             "x":mouseEvent.clientX,
             "y":mouseEvent.clientY
