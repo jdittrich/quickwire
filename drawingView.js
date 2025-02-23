@@ -8,6 +8,11 @@ import { Point } from './data/point.js';
 import { Rect } from "./data/rect.js";
 
 /**
+ * 
+ * Gets events from app.
+ * 
+ * @see {App}
+ * 
  * Does: 
  * – manage repainting
  * 
@@ -22,7 +27,6 @@ import { Rect } from "./data/rect.js";
  *  zoom
  *  pan 
  */
-
 class DrawingView{
     //private properties used in constructor
     #ctx          = null; 
@@ -44,8 +48,10 @@ class DrawingView{
      * @param {Function}              param.requestEditorText
      */
     constructor(param){
-        const {ctx,drawing,ctxSize,nameFigureClassMapper} = param
-        
+        const {ctx,drawing,ctxSize,nameFigureClassMapper, requestEditorText} = param
+        if(!(ctx && drawing && ctxSize && nameFigureClassMapper && requestEditorText)){
+            throw new Error("at least one needed parameter is missing");
+        }
         //drawing
         this.#transform = new ViewTransform();
         this.setCtxSize(ctxSize);//needed to know which area to clear on redraws
@@ -61,15 +67,21 @@ class DrawingView{
         //first draw
         this.#drawAll()
     }
+
+    /**
+     * Set the size of the canvas element (i.e. the apps "viewport" to the document)
+     * @param {Point} ctxSize 
+     */
     setCtxSize(ctxSize){
         this.#ctxSize = ctxSize;
     }
+    
     //#region: drawing
     updateDrawing(){
         this.#drawAll()
     }
     #drawAll(){
-        this.#ctx.clearRect(0,0,this.#ctxSize.x,this.#ctxSize.y)
+        this.#ctx.clearRect(0,0,this.#ctxSize.x,this.#ctxSize.y); //deletes all pixels
         this.#drawDrawing();
         this.#drawHandles();
         this.#drawPreviews();
@@ -354,6 +366,12 @@ class DrawingView{
         this.#tool.onDragend(mouseEvent, mouseDownPoint)
     }
 
+    /**
+     * @returns {Boolean}
+     */
+    isDragging(){
+        return this.#dragging;
+    }
     // #region add/remove element
     /**
      * add figures directly via code, useful for testing
