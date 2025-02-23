@@ -19,7 +19,7 @@ class Drawing extends Figure{
     draw(ctx){
         const {width, height} = this.getRect();
         ctx.save();
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "#EEE";
         ctx.fillRect(0,0,width,height);
         ctx.restore()
         this.drawContainedFigures(ctx);
