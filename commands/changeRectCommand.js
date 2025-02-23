@@ -72,6 +72,7 @@ class ChangeFigureRectCommand extends Command{
 
         //find new container and enclosed figures at new position/size of rectangle
         const {rectEnclosesFigures, rectEnclosedByFigure} = drawingView.drawing.findFiguresEnclosingAndEnclosed(changedRect);
+        // ↑ NOTE: Maybe I should separate this. This could help to fail if the rect is not enclosed in anything. 
 
         // find out which contained figures are not contained anymore after the change 
         // (e.g. after making the rect much smaller)
