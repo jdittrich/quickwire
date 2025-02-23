@@ -1,6 +1,7 @@
-import { Rect } from "../data/rect.js";
+import { Rect }   from "../data/rect.js";
 import { Handle } from "./handle.js";
-import { ChangeFigureRectCommand } from "../commands/ChangeRectCommand.js";
+import { ChangeFigureRectCommand } from "../commands/changeRectCommand.js";
+import { SubclassShouldImplementError } from "../errors.js";
 
 
 class ResizeHandle extends Handle{
@@ -43,6 +44,7 @@ class ResizeHandle extends Handle{
         const newRect = this.createChangedRect(dragMovement);
 
         //create command
+        //NOTE: maybe try/catch?
         const resizeCommand = new ChangeFigureRectCommand({
             "figure":this.getFigure(),
             "changedRect": newRect
